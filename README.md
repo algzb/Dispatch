@@ -12,28 +12,46 @@ A reusable PHP Markdown blog script. This project demonstrates clean PHP archite
 
 ## Installation
 
-1. Clone the repository into your PHP server document root.
-2. Make sure the server has read access to the `posts/` and `pages/` directories.
-3. Update `config.php` with your own branding.
-4. Open `index.php` in your browser.
+1. Copy the repository files to a PHP-capable web server directory.
+2. Ensure the web server user can read the `posts/`, `pages/`, `includes/`, and `assets/` directories.
+3. Open `config.php` and update the following values:
+   - `site_url`
+   - `blog_name`
+   - `tagline`
+   - `short_name`
+   - `author_name`
+   - `footer_text`
+4. (Optional) Replace `default_image` with your own fallback image URL.
+5. Visit `index.php` in your browser to verify the homepage loads.
 
 ## Usage
 
-- Add new blog posts as Markdown files in `posts/`.
-- Add portfolio pages in `pages/`.
-- Include front-matter metadata in each file:
+1. Create a new Markdown file in `posts/` for each blog entry.
+2. Create a new Markdown file in `pages/` for each static page.
+3. Add a YAML-style front matter block at the top of each Markdown file.
+4. Use the `slug` value to link to posts and pages from the site.
+5. To view a page, open `page.php?slug=your-page-slug` in your browser.
+6. To view a post, open `post.php?slug=your-post-slug` in your browser.
+
+### Example markdown file
 
 ```markdown
 ---
-title: My Portfolio Post
+title: Sample Post
 date: 2026-04-30
-slug: portfolio-post
+slug: sample-post
 excerpt: A short summary shown on the homepage.
-image: https://example.com/hero-image.jpg
+image: https://example.com/image.jpg
 ---
 
 Your markdown content here.
 ```
+
+### Notes
+
+- The homepage automatically lists posts from the `posts/` folder.
+- Static pages are generated from files in the `pages/` folder.
+- No database is required; the site is file-based.
 
 ## Project structure
 
