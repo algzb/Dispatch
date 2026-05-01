@@ -179,3 +179,10 @@ function pageDescription($metadata, $config) {
 
     return $config['tagline'];
 }
+
+function calculateReadingTime($content, $wordsPerMinute = 200) {
+    $plainText = strip_tags(removeFrontMatter($content));
+    $wordCount = str_word_count($plainText);
+    $minutes = ceil($wordCount / $wordsPerMinute);
+    return max(1, $minutes);
+}

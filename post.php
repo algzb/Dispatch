@@ -19,12 +19,10 @@ if ($post) {
     $imageUrl = !empty($metadata['image']) ? $metadata['image'] : $config['default_image'];
     $pageTitle = pageTitle($metadata, $config, 'Blog Post');
     $pageDescription = pageDescription($metadata, $config);
+    $readingTime = calculateReadingTime($post['content']);
 } else {
-    $metadata = [];
-    $htmlContent = '<p>Post not found. Please check the URL or return to the homepage.</p>';
-    $imageUrl = $config['default_image'];
-    $pageTitle = 'Post not found | ' . $config['blog_name'];
-    $pageDescription = $config['tagline'];
+    header('Location: 404.php', true, 404);
+    exit;
 }
 $active = '';
 ?>
@@ -45,7 +43,7 @@ $active = '';
     <div class="hero-banner" style="background-image: url('<?= html($imageUrl) ?>');">
         <div class="hero-content">
             <h1><?= html($metadata['title'] ?? 'Untitled') ?></h1>
-            <p><?= html(formatDate($metadata['date'] ?? '')) ?></p>
+            <p><?= html(formatDate($metadata['date'] ?? '')) ?> • <?= $readingTime ?> min read</p>
         </div>
     </div>
 
