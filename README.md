@@ -10,6 +10,16 @@ A reusable PHP Markdown blog script. This project demonstrates clean PHP archite
 - Safe output escaping and secure Markdown rendering
 - Simple file-based architecture for easy customization
 
+## Screenshots
+
+**Homepage - Post listing with reading time**
+
+![Homepage](https://imgur.com/DzZnb1z.png)
+
+**Post page - Markdown rendering with featured image and reading time**
+
+![Post Page](https://imgur.com/Kg1tG8U.png)
+
 ## Installation
 
 1. Copy the repository files to a PHP-capable web server directory.

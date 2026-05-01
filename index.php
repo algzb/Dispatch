@@ -36,7 +36,7 @@ $active = 'home';
                             <img src="<?= html($post['image'] ?? $config['default_image']) ?>" class="card-img-top" alt="<?= html($post['title']) ?>">
                         </a>
                         <div class="card-body d-flex flex-column">
-                            <h5 class="card-title"><?= html($post['title']) ?></h5>
+                            <h5 class="card-title"><a href="post.php?slug=<?= urlencode($post['slug']) ?>" class="text-decoration-none text-dark"><?= html($post['title']) ?></a></h5>
                             <p class="card-text text-muted mb-3"><?= html($post['formatted_date']) ?></p>
                             <p class="card-text mb-4"><?= html($post['excerpt']) ?></p>
                             <a href="post.php?slug=<?= urlencode($post['slug']) ?>" class="btn btn-primary mt-auto">Read article</a>
