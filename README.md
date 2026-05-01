@@ -1,12 +1,12 @@
 # Simple PHP Markdown Blog
 
-A portfolio-ready PHP blog built with Markdown content. This project demonstrates clean PHP architecture, reusable helpers, secure content rendering, and responsive Bootstrap design.
+A reusable PHP Markdown blog script. This project demonstrates clean PHP architecture, reusable helpers, secure content rendering, and responsive Bootstrap design.
 
 ## What this project shows
 
-- Markdown-driven blog posts and static portfolio pages
+- Markdown-driven blog posts and static pages
 - Shared helper functions for metadata parsing, slug routing, and navigation
-- Responsive UI with Bootstrap and custom branding
+- Responsive UI with Bootstrap and custom styling
 - Safe output escaping and secure Markdown rendering
 - Simple file-based architecture for easy customization
 
@@ -47,17 +47,17 @@ Your markdown content here.
 - `posts/` — markdown blog posts
 - `pages/` — markdown portfolio pages
 
-## Portfolio enhancements
+## Use case
 
-- Add a `pages/about-us.md` page with your skills and experience.
-- Use the blog to show real writing, technical thinking, or project notes.
-- Keep the project on your portfolio to show reusable and maintainable PHP code.
+- Use this script as a starter for portfolios, documentation, or project demos.
+- Customize the content and metadata to match your own branding or site.
+- Keep the project generic so it can be reused across multiple PHP-powered websites.
 
 ## License
 
 MIT License
 
-Copyright (c) 2026 Angel Gonzalez
+Copyright (c) 2026 PHP Markdown Blog
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 

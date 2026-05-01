@@ -1,35 +1,35 @@
 ---
-title: About Angel Gonzalez
+title: About this project
 date: 2026-04-30
 categories: Portfolio, About
 tags: php, markdown, bootstrap, portfolio
 slug: about-us
 image: https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1
-excerpt: Learn more about Angel Gonzalez, a PHP developer building clean, Markdown-powered portfolio projects.
+excerpt: Learn more about this reusable PHP Markdown blog script and its structure.
 ---
 
-Hello! I’m **Angel Gonzalez**, a developer who builds streamlined web experiences with PHP, Markdown, and Bootstrap.
+This project is a reusable PHP Markdown blog script designed to be easy to customize and extend.
 
-I created this blog as a portfolio project to demonstrate practical skills in:
+It demonstrates practical code patterns for:
 
-- PHP scripting and reusable architecture
-- Markdown content rendering with `Parsedown`
-- Responsive design using Bootstrap and custom styles
-- Secure output handling and clean file-based routing
+- reusable PHP helper functions
+- Markdown rendering with `Parsedown`
+- responsive layout using Bootstrap and custom styling
+- secure output escaping and file-based routing
 
 ## Why this project
 
-This site is intentionally small and maintainable. It shows how a simple content-driven project can still be structured professionally, with shared helper functions and reusable layout components.
+The goal is to provide a lightweight, maintainable content system that can be repurposed for blogs, portfolios, or documentation sites.
 
-## What I enjoy building
+## What this demo includes
 
-- Portfolio pages and project demos
-- Lightweight CMS-style tools without heavy frameworks
-- Clear, polished UI with mobile-first responsiveness
-- Backend logic that is easy to understand and extend
+- a homepage that lists Markdown posts
+- dynamic post and page rendering
+- shared layout partials for header and footer
+- metadata-driven content with front matter support
 
-## Let’s connect
+## How to use it
 
-If you’re looking for someone who can turn ideas into a clean, maintainable web project, this is the kind of work I enjoy most.
+You can replace the content, metadata, and branding with your own values. This script is intentionally generic so it works as a useful starter project for any PHP-based content site.
 
-Feel free to update this page with your own contact details or portfolio highlights when you’re ready to use it as a live demo.
+Feel free to update the content and links to match your own project or deployment.
