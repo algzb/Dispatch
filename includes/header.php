@@ -9,9 +9,6 @@ $pagesDir = $pagesDir ?? 'pages';
                 <h1 class="h2 mb-1"><?= html($config['blog_name']) ?></h1>
                 <p class="lead mb-0"><?= html($config['tagline']) ?></p>
             </div>
-            <div class="text-md-end">
-                <a class="btn btn-light btn-sm" href="page.php?slug=about-us">About</a>
-            </div>
         </div>
     </div>
 </header>
