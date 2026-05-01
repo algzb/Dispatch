@@ -1,0 +1,59 @@
+body {
+    background: #f8f9fa;
+    color: #212529;
+}
+
+.site-header {
+    background: linear-gradient(135deg, #4f73ff 0%, #2a4dc7 100%);
+    color: white;
+}
+
+.site-footer {
+    background: #111827;
+}
+
+.card img {
+    min-height: 220px;
+    object-fit: cover;
+}
+
+.hero-banner {
+    position: relative;
+    background-size: cover;
+    background-position: center;
+    min-height: 52vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.hero-banner::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+}
+
+.hero-content {
+    position: relative;
+    z-index: 1;
+    color: white;
+    text-align: center;
+}
+
+.hero-content h1 {
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    margin-bottom: 0.5rem;
+}
+
+.hero-content p {
+    font-size: 1.05rem;
+}
+
+.card-title {
+    min-height: 3rem;
+}
+
+.card-text small {
+    color: #6c757d;
+}

@@ -1,11 +1,13 @@
 <?php
 return [
-    'domain' => 'example.com/phpsimpleblog', // Replace with your actual domain
-    'blog_name' => 'PHP Simple Blog', // Blog name
-    'tagline' => 'PHP and Markdown Files', //Tagline
-    'short_name' => 'My Blog', //Appears in some areas
-    'footer_text' => '&copy; 2024 My Awesome Blog. All Rights Reserved.',
-    'privacy_policy_link' => './privacy.php', // Privacy policy link
-    'terms_service_link' => './terms.php', // Terms of service link
-    'default_image' => 'https://images.pexels.com/photos/7035194/pexels-photo-7035194.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1' // Path to the default image
+    'domain' => 'angelgonzalez.dev',
+    'site_url' => 'https://angelgonzalez.dev',
+    'blog_name' => 'Angel Gonzalez Blog',
+    'tagline' => 'A clean Markdown-powered PHP blog for my portfolio.',
+    'short_name' => 'Angel Blog',
+    'author_name' => 'Angel Gonzalez',
+    'footer_text' => '© 2026 Angel Gonzalez. Built with PHP, Markdown, and Bootstrap.',
+    'privacy_policy_link' => './privacy.php',
+    'terms_service_link' => './terms.php',
+    'default_image' => 'https://images.pexels.com/photos/7035194/pexels-photo-7035194.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1'
 ];
