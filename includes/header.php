@@ -10,7 +10,7 @@ $pagesDir = $pagesDir ?? 'pages';
                 <p class="lead mb-0"><?= html($config['tagline']) ?></p>
             </div>
             <div class="text-md-end">
-                <a class="btn btn-light btn-sm" href="page.php?slug=about-us-now">About</a>
+                <a class="btn btn-light btn-sm" href="page.php?slug=about-us">About</a>
             </div>
         </div>
     </div>

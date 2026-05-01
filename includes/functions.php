@@ -117,6 +117,7 @@ function findMarkdownBySlug($slug, $dir) {
 function generateMenu($pagesDir, $activeSlug = '') {
     $menuItems = '';
     $files = scandir($pagesDir);
+    $excludeSlugs = ['privacy', 'terms'];
 
     foreach ($files as $file) {
         if (pathinfo($file, PATHINFO_EXTENSION) !== 'md') {
@@ -130,6 +131,10 @@ function generateMenu($pagesDir, $activeSlug = '') {
 
         $metadata = parseMetadata($content);
         $slug = normalizeSlug($metadata['slug'] ?? pathinfo($file, PATHINFO_FILENAME));
+        if (in_array($slug, $excludeSlugs, true)) {
+            continue;
+        }
+
         $title = $metadata['title'] ?? ucfirst(str_replace('-', ' ', $slug));
         $activeClass = $slug === normalizeSlug($activeSlug) ? 'active' : '';
 
