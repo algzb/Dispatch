@@ -7,7 +7,7 @@ return [
     'short_name' => 'PHP Blog',
     'author_name' => 'Website Author',
     'footer_text' => '© 2026 PHP Markdown Blog. Built with PHP, Markdown, and Bootstrap.',
-    'privacy_policy_link' => './privacy.php',
-    'terms_service_link' => './terms.php',
+    'privacy_policy_link' => 'page.php?slug=privacy',
+    'terms_service_link' => 'page.php?slug=terms',
     'default_image' => 'https://images.pexels.com/photos/7035194/pexels-photo-7035194.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1'
 ];

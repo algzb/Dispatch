@@ -50,8 +50,7 @@ Your markdown content here.
 ### Notes
 
 - The homepage automatically lists posts from the `posts/` folder.
-- Static pages are generated from files in the `pages/` folder.
-- No database is required; the site is file-based.
+- Static pages are generated from files in the `pages/` folder.- Privacy and terms are served from Markdown pages in `pages/`.- No database is required; the site is file-based.
 
 ## Project structure
 
