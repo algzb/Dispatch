@@ -1,5 +1,7 @@
 # Dispatch
 
+![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
+
 A blog engine that gets out of your way. Write Markdown files, drop them in a folder, done — no database, no setup, no dependencies to install.
 
 Comes with a browser-based admin panel so you can write and publish without touching a file manager or FTP client.
