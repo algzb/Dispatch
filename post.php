@@ -65,6 +65,28 @@ $active = '';
         <div class="row">
             <div class="col-12">
                 <?= $htmlContent ?>
+
+                <?php
+                $tags       = !empty($metadata['tags'])       ? array_filter(array_map('trim', explode(',', $metadata['tags'])))       : [];
+                $categories = !empty($metadata['categories']) ? array_filter(array_map('trim', explode(',', $metadata['categories']))) : [];
+                ?>
+                <?php if ($tags || $categories): ?>
+                <div class="mt-5 pt-4 border-top">
+                    <?php if ($categories): ?>
+                    <span class="text-muted small me-2">Categories:</span>
+                    <?php foreach ($categories as $cat): ?>
+                        <a href="archive.php?category=<?= urlencode($cat) ?>" class="badge bg-primary text-decoration-none me-1"><?= html($cat) ?></a>
+                    <?php endforeach; ?>
+                    <?php endif; ?>
+                    <?php if ($tags): ?>
+                    <span class="text-muted small me-2 <?= $categories ? 'ms-3' : '' ?>">Tags:</span>
+                    <?php foreach ($tags as $tag): ?>
+                        <a href="archive.php?tag=<?= urlencode($tag) ?>" class="badge bg-secondary text-decoration-none me-1"><?= html($tag) ?></a>
+                    <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+                <?php endif; ?>
+
                 <a href="index.php" class="btn btn-primary mt-4">Back to Blog</a>
             </div>
         </div>
