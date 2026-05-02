@@ -34,6 +34,20 @@ $active = '';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= html($pageTitle) ?></title>
     <meta name="description" content="<?= html($pageDescription) ?>">
+    <?php $canonicalUrl = rtrim($config['site_url'], '/') . '/post.php?slug=' . urlencode($slug); ?>
+    <link rel="canonical" href="<?= html($canonicalUrl) ?>">
+    <!-- Open Graph -->
+    <meta property="og:type"        content="article">
+    <meta property="og:site_name"   content="<?= html($config['blog_name']) ?>">
+    <meta property="og:title"       content="<?= html($pageTitle) ?>">
+    <meta property="og:description" content="<?= html($pageDescription) ?>">
+    <meta property="og:image"       content="<?= html($imageUrl) ?>">
+    <meta property="og:url"         content="<?= html($canonicalUrl) ?>">
+    <!-- Twitter Card -->
+    <meta name="twitter:card"        content="summary_large_image">
+    <meta name="twitter:title"       content="<?= html($pageTitle) ?>">
+    <meta name="twitter:description" content="<?= html($pageDescription) ?>">
+    <meta name="twitter:image"       content="<?= html($imageUrl) ?>">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="assets/css/style.css" rel="stylesheet">
 </head>

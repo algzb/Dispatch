@@ -12,5 +12,5 @@ return [
     'default_image' => 'https://images.pexels.com/photos/7035194/pexels-photo-7035194.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
     // Demo credentials — change these before deploying to production
     'admin_user' => 'admin',
-    'admin_pass' => 'demo',
+    'admin_pass' => password_hash('demo', PASSWORD_DEFAULT),
 ];

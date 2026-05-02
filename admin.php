@@ -58,7 +58,7 @@ if ($action === 'logout') {
 if ($action === 'login' && isPost()) {
     $user = $_POST['username'] ?? '';
     $pass = $_POST['password'] ?? '';
-    if ($user === ($config['admin_user'] ?? '') && $pass === ($config['admin_pass'] ?? '')) {
+    if ($user === ($config['admin_user'] ?? '') && password_verify($pass, $config['admin_pass'] ?? '')) {
         $_SESSION['admin'] = true;
         go('admin.php');
     }
@@ -220,6 +220,9 @@ if ($action === 'save-settings' && isPost()) {
     $out = "<?php\nreturn [\n";
     foreach ($keys as $k) {
         $v = $_POST[$k] ?? $config[$k] ?? '';
+        if ($k === 'admin_pass') {
+            $v = !empty($v) ? password_hash($v, PASSWORD_DEFAULT) : ($config['admin_pass'] ?? '');
+        }
         $escaped = str_replace(["\\", "'"], ["\\\\", "\\'"], $v);
         $out .= "    '$k' => '$escaped',\n";
     }

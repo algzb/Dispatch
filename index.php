@@ -21,6 +21,20 @@ $active = 'home';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= html($config['blog_name']) ?></title>
     <meta name="description" content="<?= html($config['tagline']) ?>">
+    <?php $canonicalUrl = rtrim($config['site_url'], '/') . '/'; ?>
+    <link rel="canonical" href="<?= html($canonicalUrl) ?>">
+    <!-- Open Graph -->
+    <meta property="og:type"        content="website">
+    <meta property="og:site_name"   content="<?= html($config['blog_name']) ?>">
+    <meta property="og:title"       content="<?= html($config['blog_name']) ?>">
+    <meta property="og:description" content="<?= html($config['tagline']) ?>">
+    <meta property="og:image"       content="<?= html($config['default_image']) ?>">
+    <meta property="og:url"         content="<?= html($canonicalUrl) ?>">
+    <!-- Twitter Card -->
+    <meta name="twitter:card"        content="summary_large_image">
+    <meta name="twitter:title"       content="<?= html($config['blog_name']) ?>">
+    <meta name="twitter:description" content="<?= html($config['tagline']) ?>">
+    <meta name="twitter:image"       content="<?= html($config['default_image']) ?>">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="assets/css/style.css" rel="stylesheet">
 </head>
