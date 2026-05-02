@@ -1,6 +1,8 @@
-# Simple PHP Markdown Blog
+# Dispatch
 
-A fast, file-based blog engine built with PHP and Markdown. No database, no framework, no bloat — just files, PHP, and a clean admin panel to manage everything from the browser.
+A blog engine that gets out of your way. Write Markdown files, drop them in a folder, done — no database, no setup, no dependencies to install.
+
+Comes with a browser-based admin panel so you can write and publish without touching a file manager or FTP client.
 
 **Live demo:** [puropixel.com/blog](https://puropixel.com/blog)
 
@@ -10,89 +12,102 @@ A fast, file-based blog engine built with PHP and Markdown. No database, no fram
 
 | Homepage | Post |
 |---|---|
-| ![Homepage](https://imgur.com/DzZnb1z.png) | ![Post](https://imgur.com/Kg1tG8U.png) |
+| ![Homepage](https://i.imgur.com/DzZnb1z.png) | ![Post](https://i.imgur.com/Kg1tG8U.png) |
+
+**Admin panel**
+
+![Admin](https://i.imgur.com/FUvtyWB.png)
+
+---
+
+## Why no database?
+
+Most blogs don't need one. A database adds a server requirement, a backup strategy, a migration step, and a point of failure — for content that is just text.
+
+Dispatch stores everything as plain `.md` files. You can read them, edit them, back them up with a zip, or move them to another host in minutes.
 
 ---
 
 ## Features
 
-**Content**
-- Markdown-powered posts and static pages with YAML front matter
-- Auto-generated excerpts, reading time estimates, and featured images
+**Writing**
+- Markdown posts and static pages with YAML front matter
+- Visual editor with live preview, side-by-side mode, and autosave
+- No raw YAML — front matter fields are form inputs
+- Featured image upload directly from the editor
+- Auto-generated excerpts and reading time
+
+**Admin panel**
+- Create, edit, and delete posts and pages from the browser
+- Media library — upload, preview, copy URL, delete
+- Site settings editor — no need to edit config files manually
+
+**Publishing**
+- RSS feed at `/feed.php`, ready for any feed reader
+- Pagination on the homepage
 - Static pages auto-populate the navigation menu
 
-**Admin panel** — manage everything from the browser
-- Create, edit, and delete posts and pages
-- Visual Markdown editor (EasyMDE) with live preview, side-by-side mode, and autosave
-- YAML front matter handled via form fields — no raw YAML needed
-- Upload images directly from the editor or the media library
-- Media library with thumbnail grid, one-click copy URL, and delete
-- Site settings editor — update blog name, tagline, URLs, author, and admin credentials
-
-**RSS feed**
-- Auto-generated feed at `/feed.php` — works with any RSS reader out of the box
-
 **Technical**
-- Zero database — all content is plain `.md` files
-- PHP 7.4+ compatible, no Composer required
-- Bootstrap 5 UI, fully responsive
-- Safe Markdown rendering via Parsedown (safe mode)
-- Output escaping with `htmlspecialchars` throughout
+- No database — all content is plain `.md` files
+- PHP 7.4+, no Composer, no framework
+- Bootstrap 5, fully responsive
+- Safe Markdown rendering via Parsedown
 - Path traversal protection on all file operations
 
 ---
 
-## Installation
+## Getting started
 
-1. Upload all files to a PHP 7.4+ web server.
+1. Upload the files to any PHP 7.4+ web server.
 2. Make sure the server can **write** to `posts/`, `pages/`, `assets/uploads/`, and `config.php`.
-3. If the blog lives in a subdirectory (e.g. `/blog/`), update `RewriteBase` in `.htaccess`:
+3. If Dispatch lives in a subdirectory (e.g. `/blog/`), set `RewriteBase` in `.htaccess`:
    ```apache
    RewriteBase /blog/
    ```
-4. Open `config.php` and set your site details and admin credentials:
+4. Set your details in `config.php`:
    ```php
    'site_url'   => 'https://yoursite.com',
    'blog_name'  => 'My Blog',
    'admin_user' => 'admin',
    'admin_pass' => 'your-password',
    ```
-5. Visit `yoursite.com/admin.php` to log in and start writing.
+5. Go to `yoursite.com/admin.php` and start writing.
 
 ---
 
 ## Admin panel
-
-Go to `admin.php` and log in. From there:
 
 | Section | What you can do |
 |---|---|
 | **Posts** | List, create, edit, delete blog posts |
 | **Pages** | List, create, edit, delete static pages |
 | **Media** | Upload images, copy URLs, delete files |
-| **Settings** | Edit all site config without touching files |
-
-### Writing content
-
-The editor is [EasyMDE](https://github.com/Ionaru/easy-markdown-editor) — a full Markdown editor with toolbar, live preview, side-by-side mode, and autosave. Images can be uploaded directly from the toolbar (drag & drop or click).
-
-### Front matter fields
-
-| Field | Description |
-|---|---|
-| `title` | Post or page title |
-| `date` | Publication date (`YYYY-MM-DD`) |
-| `slug` | URL identifier — auto-generated from title if left blank |
-| `categories` | Comma-separated (posts only) |
-| `tags` | Comma-separated (posts only) |
-| `image` | Featured image URL |
-| `excerpt` | Summary for listings and SEO — auto-generated if omitted |
+| **Settings** | Edit all site config from the browser |
 
 ---
 
-## RSS feed
+## Content format
 
-The feed is available at `/feed.php` and includes the 20 most recent posts with titles, excerpts, dates, and thumbnails. Add it to any RSS reader or use it with feed aggregators.
+Each post or page is a `.md` file with a front matter block at the top:
+
+```markdown
+---
+title: My Post Title
+date: 2026-01-15
+slug: my-post-title
+categories: Dev, PHP
+tags: markdown, bootstrap
+image: https://example.com/image.jpg
+excerpt: Short summary shown on the homepage.
+---
+
+Your Markdown content here.
+```
+
+- `slug` is used in the URL (`post.php?slug=my-post-title`)
+- `slug` is auto-generated from the title if left blank
+- `excerpt` is auto-generated if omitted
+- `image` falls back to the default image in `config.php`
 
 ---
 
@@ -101,21 +116,21 @@ The feed is available at `/feed.php` and includes the 20 most recent posts with 
 ```
 ├── admin.php              — admin panel (login, CRUD, media, settings)
 ├── feed.php               — RSS 2.0 feed
-├── index.php              — homepage (post listing)
-├── post.php               — individual post renderer
+├── index.php              — homepage with pagination
+├── post.php               — post renderer
 ├── page.php               — static page renderer
 ├── 404.php                — not found page
 ├── config.php             — site config and admin credentials
-├── .htaccess              — URL routing and charset
+├── .htaccess              — URL routing
 ├── includes/
-│   ├── functions.php      — shared helpers (parsing, routing, formatting)
-│   ├── header.php         — site header partial
-│   └── footer.php         — site footer partial
+│   ├── functions.php      — shared helpers
+│   ├── header.php         — header partial
+│   └── footer.php         — footer partial
 ├── libs/
 │   └── Parsedown.php      — Markdown parser
 ├── assets/
-│   ├── css/style.css      — custom styles
-│   └── uploads/           — uploaded media (created automatically)
+│   ├── css/style.css      — styles
+│   └── uploads/           — uploaded media
 ├── posts/                 — blog post Markdown files
 └── pages/                 — static page Markdown files
 ```

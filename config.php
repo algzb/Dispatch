@@ -1,12 +1,12 @@
 <?php
 return [
-    'domain' => 'example.com/php-markdown-blog',
+    'domain' => 'example.com/dispatch',
     'site_url' => 'https://example.com',
-    'blog_name' => 'PHP Markdown Blog',
-    'tagline' => 'A reusable, Markdown-powered PHP blog script.',
-    'short_name' => 'PHP Blog',
+    'blog_name' => 'Dispatch',
+    'tagline' => 'A blog. No database required.',
+    'short_name' => 'Dispatch',
     'author_name' => 'Website Author',
-    'footer_text' => '© 2026 PHP Markdown Blog. Built with PHP, Markdown, and Bootstrap.',
+    'footer_text' => '© 2026 Dispatch. Built with PHP and Markdown.',
     'privacy_policy_link' => 'page.php?slug=privacy',
     'terms_service_link' => 'page.php?slug=terms',
     'default_image' => 'https://images.pexels.com/photos/7035194/pexels-photo-7035194.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
