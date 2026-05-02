@@ -6,5 +6,10 @@
             &nbsp;|&nbsp;
             <a class="text-decoration-underline text-white" href="<?= html($config['terms_service_link']) ?>">Terms of Service</a>
         </p>
+    <p class="mb-0 small">
+            <a class="text-decoration-underline text-white" href="<?= html($config['privacy_policy_link']) ?>">Privacy Policy</a>
+            &nbsp;|&nbsp;
+            <a class="text-decoration-underline text-white" href="feed.php">RSS</a>
+        </p>
     </div>
 </footer>

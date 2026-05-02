@@ -4,8 +4,14 @@ $config = require 'config.php';
 
 $postsDir = 'posts';
 $pagesDir = 'pages';
-$posts = loadPosts($postsDir);
-$posts = sortPostsByDate($posts);
+$posts = sortPostsByDate(loadPosts($postsDir));
+
+$perPage     = 6;
+$totalPosts  = count($posts);
+$totalPages  = (int) ceil($totalPosts / $perPage);
+$currentPage = max(1, min($totalPages ?: 1, (int) ($_GET['page'] ?? 1)));
+$posts       = array_slice($posts, ($currentPage - 1) * $perPage, $perPage);
+
 $active = 'home';
 ?>
 <!DOCTYPE html>
@@ -45,6 +51,24 @@ $active = 'home';
                 </div>
             <?php endforeach; ?>
         </div>
+
+        <?php if ($totalPages > 1): ?>
+        <nav class="mt-5" aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+                <li class="page-item <?= $currentPage <= 1 ? 'disabled' : '' ?>">
+                    <a class="page-link" href="?page=<?= $currentPage - 1 ?>">Previous</a>
+                </li>
+                <?php for ($p = 1; $p <= $totalPages; $p++): ?>
+                <li class="page-item <?= $p === $currentPage ? 'active' : '' ?>">
+                    <a class="page-link" href="?page=<?= $p ?>"><?= $p ?></a>
+                </li>
+                <?php endfor; ?>
+                <li class="page-item <?= $currentPage >= $totalPages ? 'disabled' : '' ?>">
+                    <a class="page-link" href="?page=<?= $currentPage + 1 ?>">Next</a>
+                </li>
+            </ul>
+        </nav>
+        <?php endif; ?>
     </main>
 
     <?php include 'includes/footer.php'; ?>

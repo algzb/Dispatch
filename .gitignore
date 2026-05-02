@@ -1,0 +1,13 @@
+# Claude Code
+CLAUDE.md
+
+# Uploaded media
+assets/uploads/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Editor directories
+.vscode/
+.idea/

@@ -1,97 +1,127 @@
 # Simple PHP Markdown Blog
 
-A reusable PHP Markdown blog script. This project demonstrates clean PHP architecture, reusable helpers, secure content rendering, and responsive Bootstrap design.
+A fast, file-based blog engine built with PHP and Markdown. No database, no framework, no bloat — just files, PHP, and a clean admin panel to manage everything from the browser.
 
-## What this project shows
+**Live demo:** [puropixel.com/blog](https://puropixel.com/blog)
 
-- Markdown-driven blog posts and static pages
-- Shared helper functions for metadata parsing, slug routing, and navigation
-- Responsive UI with Bootstrap and custom styling
-- Safe output escaping and secure Markdown rendering
-- Simple file-based architecture for easy customization
+---
 
 ## Screenshots
 
-**Homepage - Post listing with reading time**
+| Homepage | Post |
+|---|---|
+| ![Homepage](https://imgur.com/DzZnb1z.png) | ![Post](https://imgur.com/Kg1tG8U.png) |
 
-![Homepage](https://imgur.com/DzZnb1z.png)
+---
 
-**Post page - Markdown rendering with featured image and reading time**
+## Features
 
-![Post Page](https://imgur.com/Kg1tG8U.png)
+**Content**
+- Markdown-powered posts and static pages with YAML front matter
+- Auto-generated excerpts, reading time estimates, and featured images
+- Static pages auto-populate the navigation menu
+
+**Admin panel** — manage everything from the browser
+- Create, edit, and delete posts and pages
+- Visual Markdown editor (EasyMDE) with live preview, side-by-side mode, and autosave
+- YAML front matter handled via form fields — no raw YAML needed
+- Upload images directly from the editor or the media library
+- Media library with thumbnail grid, one-click copy URL, and delete
+- Site settings editor — update blog name, tagline, URLs, author, and admin credentials
+
+**RSS feed**
+- Auto-generated feed at `/feed.php` — works with any RSS reader out of the box
+
+**Technical**
+- Zero database — all content is plain `.md` files
+- PHP 7.4+ compatible, no Composer required
+- Bootstrap 5 UI, fully responsive
+- Safe Markdown rendering via Parsedown (safe mode)
+- Output escaping with `htmlspecialchars` throughout
+- Path traversal protection on all file operations
+
+---
 
 ## Installation
 
-1. Copy the repository files to a PHP-capable web server directory.
-2. Ensure the web server user can read the `posts/`, `pages/`, `includes/`, and `assets/` directories.
-3. Open `config.php` and update the following values:
-   - `site_url`
-   - `blog_name`
-   - `tagline`
-   - `short_name`
-   - `author_name`
-   - `footer_text`
-4. (Optional) Replace `default_image` with your own fallback image URL.
-5. Visit `index.php` in your browser to verify the homepage loads.
+1. Upload all files to a PHP 7.4+ web server.
+2. Make sure the server can **write** to `posts/`, `pages/`, `assets/uploads/`, and `config.php`.
+3. If the blog lives in a subdirectory (e.g. `/blog/`), update `RewriteBase` in `.htaccess`:
+   ```apache
+   RewriteBase /blog/
+   ```
+4. Open `config.php` and set your site details and admin credentials:
+   ```php
+   'site_url'   => 'https://yoursite.com',
+   'blog_name'  => 'My Blog',
+   'admin_user' => 'admin',
+   'admin_pass' => 'your-password',
+   ```
+5. Visit `yoursite.com/admin.php` to log in and start writing.
 
-## Usage
-
-1. Create a new Markdown file in `posts/` for each blog entry.
-2. Create a new Markdown file in `pages/` for each static page.
-3. Add a YAML-style front matter block at the top of each Markdown file.
-4. Use the `slug` value to link to posts and pages from the site.
-5. To view a page, open `page.php?slug=your-page-slug` in your browser.
-6. To view a post, open `post.php?slug=your-post-slug` in your browser.
-
-### Example markdown file
-
-```markdown
----
-title: Sample Post
-date: 2026-04-30
-slug: sample-post
-excerpt: A short summary shown on the homepage.
-image: https://example.com/image.jpg
 ---
 
-Your markdown content here.
-```
+## Admin panel
 
-### Notes
+Go to `admin.php` and log in. From there:
 
-- The homepage automatically lists posts from the `posts/` folder.
-- Static pages are generated from files in the `pages/` folder.- Privacy and terms are served from Markdown pages in `pages/`.- No database is required; the site is file-based.
+| Section | What you can do |
+|---|---|
+| **Posts** | List, create, edit, delete blog posts |
+| **Pages** | List, create, edit, delete static pages |
+| **Media** | Upload images, copy URLs, delete files |
+| **Settings** | Edit all site config without touching files |
+
+### Writing content
+
+The editor is [EasyMDE](https://github.com/Ionaru/easy-markdown-editor) — a full Markdown editor with toolbar, live preview, side-by-side mode, and autosave. Images can be uploaded directly from the toolbar (drag & drop or click).
+
+### Front matter fields
+
+| Field | Description |
+|---|---|
+| `title` | Post or page title |
+| `date` | Publication date (`YYYY-MM-DD`) |
+| `slug` | URL identifier — auto-generated from title if left blank |
+| `categories` | Comma-separated (posts only) |
+| `tags` | Comma-separated (posts only) |
+| `image` | Featured image URL |
+| `excerpt` | Summary for listings and SEO — auto-generated if omitted |
+
+---
+
+## RSS feed
+
+The feed is available at `/feed.php` and includes the 20 most recent posts with titles, excerpts, dates, and thumbnails. Add it to any RSS reader or use it with feed aggregators.
+
+---
 
 ## Project structure
 
-- `index.php` — homepage listing of blog posts
-- `post.php` — individual post pages
-- `page.php` — static page renderer
-- `includes/functions.php` — shared helper functions
-- `includes/header.php` / `includes/footer.php` — common layout partials
-- `config.php` — site configuration and branding
-- `assets/css/style.css` — custom styling
-- `posts/` — markdown blog posts
-- `pages/` — markdown portfolio pages
-
-## Use case
-
-- Use this script as a starter for portfolios, documentation, or project demos.
-- Customize the content and metadata to match your own branding or site.
-- Keep the project generic so it can be reused across multiple PHP-powered websites.
-
-## License
-
-MIT License
-
-Copyright (c) 2026 PHP Markdown Blog
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+```
+├── admin.php              — admin panel (login, CRUD, media, settings)
+├── feed.php               — RSS 2.0 feed
+├── index.php              — homepage (post listing)
+├── post.php               — individual post renderer
+├── page.php               — static page renderer
+├── 404.php                — not found page
+├── config.php             — site config and admin credentials
+├── .htaccess              — URL routing and charset
+├── includes/
+│   ├── functions.php      — shared helpers (parsing, routing, formatting)
+│   ├── header.php         — site header partial
+│   └── footer.php         — site footer partial
+├── libs/
+│   └── Parsedown.php      — Markdown parser
+├── assets/
+│   ├── css/style.css      — custom styles
+│   └── uploads/           — uploaded media (created automatically)
+├── posts/                 — blog post Markdown files
+└── pages/                 — static page Markdown files
+```
 
 ---
 
-This project uses [Parsedown](https://parsedown.org) by Emanuil Rusev for Markdown parsing.
+## License
+
+MIT — uses [Parsedown](https://parsedown.org) by Emanuil Rusev.
