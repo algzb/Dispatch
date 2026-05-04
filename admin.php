@@ -240,20 +240,21 @@ if ($action === 'delete-media' && isPost()) {
 if ($action === 'save-settings' && isPost()) {
     verifyCsrf();
     $configPath = __DIR__ . '/config.php';
-    $keys = ['site_url','blog_name','tagline','short_name','author_name',
-             'footer_text','privacy_policy_link','terms_service_link','default_image',
-             'admin_user','admin_pass'];
-    $out = "<?php\nreturn [\n";
-    foreach ($keys as $k) {
-        $v = $_POST[$k] ?? $config[$k] ?? '';
+    $formKeys = ['site_url','blog_name','tagline','short_name','author_name',
+                 'footer_text','privacy_policy_link','terms_service_link','default_image',
+                 'admin_user','admin_pass'];
+    $new = $config;
+    foreach ($formKeys as $k) {
+        $v = trim($_POST[$k] ?? '');
         if ($k === 'admin_pass') {
-            $v = !empty($v) ? password_hash($v, PASSWORD_DEFAULT) : ($config['admin_pass'] ?? '');
+            if ($v !== '') {
+                $new[$k] = password_hash($v, PASSWORD_DEFAULT);
+            }
+        } else {
+            $new[$k] = $v;
         }
-        $escaped = str_replace(["\\", "'"], ["\\\\", "\\'"], $v);
-        $out .= "    '$k' => '$escaped',\n";
     }
-    $out .= "];\n";
-    file_put_contents($configPath, $out);
+    file_put_contents($configPath, '<?php' . "\nreturn " . var_export($new, true) . ";\n");
     go('admin.php?action=settings&saved=1');
 }
 
@@ -585,7 +586,7 @@ $baseUrl  = $protocol . '://' . $_SERVER['HTTP_HOST'] . rtrim(dirname($_SERVER['
         </div>
         <div class="col-md-6">
             <label class="form-label fw-semibold">Password</label>
-            <input type="text" name="admin_pass" class="form-control" value="<?= e($config['admin_pass'] ?? '') ?>">
+            <input type="password" name="admin_pass" class="form-control" placeholder="Leave blank to keep current">
         </div>
     </div>
 </div>
