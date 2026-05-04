@@ -19,11 +19,8 @@ if ($page) {
     $pageTitle = pageTitle($metadata, $config, 'Page');
     $pageDescription = pageDescription($metadata, $config);
 } else {
-    $metadata = [];
-    $htmlContent = '<p>Page not found. Please check the URL or return to the homepage.</p>';
-    $imageUrl = $config['default_image'];
-    $pageTitle = 'Page not found | ' . $config['blog_name'];
-    $pageDescription = $config['tagline'];
+    header('Location: ' . rtrim($config['base_path'] ?? '/', '/') . '/404.php', true, 302);
+    exit;
 }
 $base   = rtrim($config['base_path'] ?? '/', '/');
 $active = $slug;

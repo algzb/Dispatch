@@ -45,7 +45,8 @@ Dispatch stores everything as plain `.md` files. You can read them, edit them, b
 - Site settings editor — no need to edit config files manually
 
 **Publishing**
-- RSS feed at `/feed.php`, ready for any feed reader
+- RSS feed at `/feed.xml`, ready for any feed reader
+- Clean URLs (`/post/slug`, `/tag/name`, `/category/name`, `/archive`)
 - Pagination on the homepage
 - Static pages auto-populate the navigation menu
 
@@ -54,26 +55,28 @@ Dispatch stores everything as plain `.md` files. You can read them, edit them, b
 - PHP 7.4+, no Composer, no framework
 - Bootstrap 5, fully responsive
 - Safe Markdown rendering via Parsedown
+- CSRF protection on all admin forms
 - Path traversal protection on all file operations
 
 ---
 
 ## Getting started
 
-1. Upload the files to any PHP 7.4+ web server.
+1. Upload the files to any PHP 7.4+ web server with `mod_rewrite` enabled.
 2. Make sure the server can **write** to `posts/`, `pages/`, `assets/uploads/`, and `config.php`.
-3. If Dispatch lives in a subdirectory (e.g. `/blog/`), set `RewriteBase` in `.htaccess`:
-   ```apache
-   RewriteBase /blog/
-   ```
-4. Set your details in `config.php`:
+3. Set your site URL and blog name in `config.php`:
    ```php
-   'site_url'   => 'https://yoursite.com',
-   'blog_name'  => 'My Blog',
-   'admin_user' => 'admin',
-   'admin_pass' => 'your-password',
+   'site_url'  => 'https://yoursite.com',
+   'blog_name' => 'My Blog',
    ```
-5. Go to `yoursite.com/admin.php` and start writing.
+4. If Dispatch lives in a subdirectory (e.g. `/blog/`), update **two** settings to match:
+   - `config.php`: `'base_path' => '/blog/',`
+   - `.htaccess`: `RewriteBase /blog/`
+5. Go to `yoursite.com/admin` and log in with the default credentials:
+   - **Username:** `admin` **Password:** `demo`
+6. Change your password immediately in **Settings** after first login.
+
+> **Security:** The default password is public knowledge. Change it before the site is reachable.
 
 ---
 
@@ -106,7 +109,7 @@ excerpt: Short summary shown on the homepage.
 Your Markdown content here.
 ```
 
-- `slug` is used in the URL (`post.php?slug=my-post-title`)
+- `slug` is used in the URL (`/post/my-post-title`)
 - `slug` is auto-generated from the title if left blank
 - `excerpt` is auto-generated if omitted
 - `image` falls back to the default image in `config.php`
