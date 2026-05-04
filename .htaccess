@@ -3,11 +3,35 @@ AddDefaultCharset UTF-8
 <IfModule mod_rewrite.c>
 
 RewriteEngine On
-RewriteBase /blog/
+# Set this to match base_path in config.php (e.g. / or /blog/)
+RewriteBase /
 
-# All non-file, non-directory requests go to index.php
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^(.*)$ index.php [L]
+# Pass real files and directories through
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# RSS feed
+RewriteRule ^feed\.xml$              feed.php        [L]
+
+# Admin panel (preserves ?action=, ?type=, etc.)
+RewriteRule ^admin/?$                admin.php       [QSA,L]
+
+# Individual post
+RewriteRule ^post/([^/]+)/?$         post.php?slug=$1   [QSA,L]
+
+# Static page
+RewriteRule ^page/([^/]+)/?$         page.php?slug=$1   [QSA,L]
+
+# Tag filter
+RewriteRule ^tag/([^/]+)/?$          archive.php?tag=$1    [QSA,L]
+
+# Category filter
+RewriteRule ^category/([^/]+)/?$     archive.php?category=$1  [QSA,L]
+
+# Archive index
+RewriteRule ^archive/?$              archive.php     [L]
 
 </IfModule>
+
+ErrorDocument 404 /404.php

@@ -6,7 +6,9 @@
       "Bash(gh auth *)",
       "Bash(gh repo *)",
       "PowerShell(gh auth status 2>&1)",
-      "PowerShell(gh repo view --json name,owner 2>&1)"
+      "PowerShell(gh repo view --json name,owner 2>&1)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\angel\\\\Documents\\\\GitHub\\\\Simple-PHP-Markdown-Blog\" -Recurse -Force)",
+      "Bash(Select-Object FullName)"
     ]
   }
 }

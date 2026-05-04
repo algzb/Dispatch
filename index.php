@@ -12,6 +12,7 @@ $totalPages  = (int) ceil($totalPosts / $perPage);
 $currentPage = max(1, min($totalPages ?: 1, (int) ($_GET['page'] ?? 1)));
 $posts       = array_slice($posts, ($currentPage - 1) * $perPage, $perPage);
 
+$base   = rtrim($config['base_path'] ?? '/', '/');
 $active = 'home';
 ?>
 <!DOCTYPE html>
@@ -36,7 +37,7 @@ $active = 'home';
     <meta name="twitter:description" content="<?= html($config['tagline']) ?>">
     <meta name="twitter:image"       content="<?= html($config['default_image']) ?>">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="assets/css/style.css" rel="stylesheet">
+    <link href="<?= $base ?>/assets/css/style.css" rel="stylesheet">
 </head>
 <body>
     <?php include 'includes/header.php'; ?>
@@ -52,14 +53,14 @@ $active = 'home';
             <?php foreach ($posts as $post): ?>
                 <div class="col-md-6 col-lg-4">
                     <div class="card h-100 shadow-sm">
-                        <a href="post.php?slug=<?= urlencode($post['slug']) ?>">
+                        <a href="<?= $base ?>/post/<?= urlencode($post['slug']) ?>">
                             <img src="<?= html($post['image'] ?? $config['default_image']) ?>" class="card-img-top" alt="<?= html($post['title']) ?>">
                         </a>
                         <div class="card-body d-flex flex-column">
-                            <h5 class="card-title"><a href="post.php?slug=<?= urlencode($post['slug']) ?>" class="text-decoration-none text-dark"><?= html($post['title']) ?></a></h5>
+                            <h5 class="card-title"><a href="<?= $base ?>/post/<?= urlencode($post['slug']) ?>" class="text-decoration-none text-dark"><?= html($post['title']) ?></a></h5>
                             <p class="card-text text-muted mb-3"><?= html($post['formatted_date']) ?></p>
                             <p class="card-text mb-4"><?= html($post['excerpt']) ?></p>
-                            <a href="post.php?slug=<?= urlencode($post['slug']) ?>" class="btn btn-primary mt-auto">Read article</a>
+                            <a href="<?= $base ?>/post/<?= urlencode($post['slug']) ?>" class="btn btn-primary mt-auto">Read article</a>
                         </div>
                     </div>
                 </div>

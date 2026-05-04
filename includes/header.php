@@ -15,16 +15,16 @@ $pagesDir = $pagesDir ?? 'pages';
 
 <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
     <div class="container">
-        <a class="navbar-brand fw-bold" href="index.php"><?= html($config['short_name'] ?? $config['blog_name']) ?></a>
+        <a class="navbar-brand fw-bold" href="<?= rtrim($config['base_path'] ?? '/', '/') ?>/"><?= html($config['short_name'] ?? $config['blog_name']) ?></a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ms-auto">
                 <li class="nav-item">
-                    <a class="nav-link <?= $active === 'home' ? 'active' : '' ?>" href="index.php">Home</a>
+                    <a class="nav-link <?= $active === 'home' ? 'active' : '' ?>" href="<?= rtrim($config['base_path'] ?? '/', '/') ?>/">Home</a>
                 </li>
-                <?= generateMenu($pagesDir, $active) ?>
+                <?= generateMenu($pagesDir, $active, $config['base_path'] ?? '/') ?>
             </ul>
         </div>
     </div>

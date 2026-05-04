@@ -4,7 +4,7 @@ $config = require __DIR__ . '/config.php';
 
 $posts   = sortPostsByDate(loadPosts(__DIR__ . '/posts'));
 $siteUrl = rtrim($config['site_url'], '/');
-$feedUrl = $siteUrl . '/feed.php';
+$feedUrl = $siteUrl . '/feed.xml';
 
 header('Content-Type: application/rss+xml; charset=UTF-8');
 echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
@@ -18,7 +18,7 @@ echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
     <generator>Simple PHP Markdown Blog</generator>
     <atom:link href="<?= htmlspecialchars($feedUrl, ENT_XML1) ?>" rel="self" type="application/rss+xml"/>
 <?php foreach (array_slice($posts, 0, 20) as $post):
-    $postUrl = $siteUrl . '/post.php?slug=' . urlencode($post['slug']);
+    $postUrl = $siteUrl . '/post/' . urlencode($post['slug']);
     $pubDate = !empty($post['date']) ? date(DATE_RSS, strtotime($post['date'])) : date(DATE_RSS);
     $image   = !empty($post['image']) ? $post['image'] : ($config['default_image'] ?? '');
 ?>

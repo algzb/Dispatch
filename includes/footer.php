@@ -2,13 +2,14 @@
     <div class="container text-center">
         <p class="mb-2"><?= html($config['footer_text']) ?></p>
         <p class="mb-0 small">
-            <a class="text-decoration-underline text-white" href="archive.php">Archive</a>
+            <?php $base = rtrim($config['base_path'] ?? '/', '/'); ?>
+            <a class="text-decoration-underline text-white" href="<?= $base ?>/archive">Archive</a>
             &nbsp;|&nbsp;
-            <a class="text-decoration-underline text-white" href="feed.php">RSS</a>
+            <a class="text-decoration-underline text-white" href="<?= $base ?>/feed.xml">RSS</a>
             &nbsp;|&nbsp;
-            <a class="text-decoration-underline text-white" href="<?= html($config['privacy_policy_link']) ?>">Privacy Policy</a>
+            <a class="text-decoration-underline text-white" href="<?= $base ?>/<?= html(ltrim($config['privacy_policy_link'], '/')) ?>">Privacy Policy</a>
             &nbsp;|&nbsp;
-            <a class="text-decoration-underline text-white" href="<?= html($config['terms_service_link']) ?>">Terms of Service</a>
+            <a class="text-decoration-underline text-white" href="<?= $base ?>/<?= html(ltrim($config['terms_service_link'], '/')) ?>">Terms of Service</a>
         </p>
     </div>
 </footer>

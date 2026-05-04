@@ -42,6 +42,7 @@ if ($filterTag !== '') {
     $pageTitle     = 'Archive';
 }
 
+$base   = rtrim($config['base_path'] ?? '/', '/');
 $active = '';
 ?>
 <!DOCTYPE html>
@@ -52,7 +53,7 @@ $active = '';
     <title><?= html($pageTitle . ' | ' . $config['blog_name']) ?></title>
     <meta name="description" content="<?= html($config['tagline']) ?>">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="assets/css/style.css" rel="stylesheet">
+    <link href="<?= $base ?>/assets/css/style.css" rel="stylesheet">
 </head>
 <body>
 <?php include 'includes/header.php'; ?>
@@ -62,7 +63,7 @@ $active = '';
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="mb-0"><?= html($pageTitle) ?></h2>
         <?php if ($filterTag || $filterCategory): ?>
-            <a href="archive.php" class="btn btn-sm btn-outline-secondary">← All posts</a>
+            <a href="<?= $base ?>/archive" class="btn btn-sm btn-outline-secondary">← All posts</a>
         <?php endif; ?>
     </div>
 
@@ -73,7 +74,7 @@ $active = '';
         <h6 class="text-muted text-uppercase fw-semibold mb-3" style="font-size:.75rem;letter-spacing:.08em">Tags</h6>
         <div class="d-flex flex-wrap gap-2">
             <?php foreach ($tagMap as $tag => $posts): ?>
-                <a href="archive.php?tag=<?= urlencode($tag) ?>"
+                <a href="<?= $base ?>/tag/<?= urlencode($tag) ?>"
                    class="badge bg-secondary text-decoration-none fs-6 fw-normal">
                     <?= html($tag) ?> <span class="opacity-75">(<?= count($posts) ?>)</span>
                 </a>
@@ -88,7 +89,7 @@ $active = '';
         <h6 class="text-muted text-uppercase fw-semibold mb-3" style="font-size:.75rem;letter-spacing:.08em">Categories</h6>
         <div class="d-flex flex-wrap gap-2">
             <?php foreach ($categoryMap as $cat => $posts): ?>
-                <a href="archive.php?category=<?= urlencode($cat) ?>"
+                <a href="<?= $base ?>/category/<?= urlencode($cat) ?>"
                    class="badge bg-primary text-decoration-none fs-6 fw-normal">
                     <?= html($cat) ?> <span class="opacity-75">(<?= count($posts) ?>)</span>
                 </a>
@@ -120,15 +121,15 @@ $active = '';
             <li class="d-flex align-items-start gap-3 py-2 border-bottom">
                 <span class="text-muted small text-nowrap" style="min-width:90px"><?= html(formatDate($post['date'], 'M j')) ?></span>
                 <div>
-                    <a href="post.php?slug=<?= urlencode($post['slug']) ?>" class="fw-semibold text-decoration-none text-dark">
+                    <a href="<?= $base ?>/post/<?= urlencode($post['slug']) ?>" class="fw-semibold text-decoration-none text-dark">
                         <?= html($post['title']) ?>
                     </a>
                     <div class="mt-1">
                         <?php foreach ($categories as $cat): ?>
-                            <a href="archive.php?category=<?= urlencode($cat) ?>" class="badge bg-primary text-decoration-none me-1" style="font-size:.7rem"><?= html($cat) ?></a>
+                            <a href="<?= $base ?>/category/<?= urlencode($cat) ?>" class="badge bg-primary text-decoration-none me-1" style="font-size:.7rem"><?= html($cat) ?></a>
                         <?php endforeach; ?>
                         <?php foreach ($tags as $tag): ?>
-                            <a href="archive.php?tag=<?= urlencode($tag) ?>" class="badge bg-secondary text-decoration-none me-1" style="font-size:.7rem"><?= html($tag) ?></a>
+                            <a href="<?= $base ?>/tag/<?= urlencode($tag) ?>" class="badge bg-secondary text-decoration-none me-1" style="font-size:.7rem"><?= html($tag) ?></a>
                         <?php endforeach; ?>
                     </div>
                 </div>

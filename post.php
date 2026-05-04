@@ -21,9 +21,10 @@ if ($post) {
     $pageDescription = pageDescription($metadata, $config);
     $readingTime = calculateReadingTime($post['content']);
 } else {
-    header('Location: 404.php', true, 404);
+    header('Location: ' . rtrim($config['base_path'] ?? '/', '/') . '/404.php', true, 404);
     exit;
 }
+$base   = rtrim($config['base_path'] ?? '/', '/');
 $active = '';
 ?>
 
@@ -34,7 +35,7 @@ $active = '';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= html($pageTitle) ?></title>
     <meta name="description" content="<?= html($pageDescription) ?>">
-    <?php $canonicalUrl = rtrim($config['site_url'], '/') . '/post.php?slug=' . urlencode($slug); ?>
+    <?php $canonicalUrl = rtrim($config['site_url'], '/') . '/post/' . urlencode($slug); ?>
     <link rel="canonical" href="<?= html($canonicalUrl) ?>">
     <!-- Open Graph -->
     <meta property="og:type"        content="article">
@@ -49,7 +50,7 @@ $active = '';
     <meta name="twitter:description" content="<?= html($pageDescription) ?>">
     <meta name="twitter:image"       content="<?= html($imageUrl) ?>">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="assets/css/style.css" rel="stylesheet">
+    <link href="<?= $base ?>/assets/css/style.css" rel="stylesheet">
 </head>
 <body>
     <?php include 'includes/header.php'; ?>
@@ -75,19 +76,19 @@ $active = '';
                     <?php if ($categories): ?>
                     <span class="text-muted small me-2">Categories:</span>
                     <?php foreach ($categories as $cat): ?>
-                        <a href="archive.php?category=<?= urlencode($cat) ?>" class="badge bg-primary text-decoration-none me-1"><?= html($cat) ?></a>
+                        <a href="<?= $base ?>/category/<?= urlencode($cat) ?>" class="badge bg-primary text-decoration-none me-1"><?= html($cat) ?></a>
                     <?php endforeach; ?>
                     <?php endif; ?>
                     <?php if ($tags): ?>
                     <span class="text-muted small me-2 <?= $categories ? 'ms-3' : '' ?>">Tags:</span>
                     <?php foreach ($tags as $tag): ?>
-                        <a href="archive.php?tag=<?= urlencode($tag) ?>" class="badge bg-secondary text-decoration-none me-1"><?= html($tag) ?></a>
+                        <a href="<?= $base ?>/tag/<?= urlencode($tag) ?>" class="badge bg-secondary text-decoration-none me-1"><?= html($tag) ?></a>
                     <?php endforeach; ?>
                     <?php endif; ?>
                 </div>
                 <?php endif; ?>
 
-                <a href="index.php" class="btn btn-primary mt-4">Back to Blog</a>
+                <a href="<?= $base ?>/" class="btn btn-primary mt-4">Back to Blog</a>
             </div>
         </div>
     </main>

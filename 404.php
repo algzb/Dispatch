@@ -1,6 +1,7 @@
 <?php
 require 'includes/functions.php';
 $config = require 'config.php';
+$base   = rtrim($config['base_path'] ?? '/', '/');
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -10,7 +11,7 @@ $config = require 'config.php';
     <title><?= html('Page Not Found | ' . $config['blog_name']) ?></title>
     <meta name="description" content="The page you're looking for could not be found.">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="assets/css/style.css" rel="stylesheet">
+    <link href="<?= $base ?>/assets/css/style.css" rel="stylesheet">
 </head>
 <body>
     <?php 
@@ -26,7 +27,7 @@ $config = require 'config.php';
                 <p class="lead mb-4">Sorry, the page you're looking for doesn't exist or has been moved.</p>
                 
                 <div class="d-flex gap-2 justify-content-center">
-                    <a href="index.php" class="btn btn-primary">Back to Home</a>
+                    <a href="<?= $base ?>/" class="btn btn-primary">Back to Home</a>
                     <a href="javascript:history.back()" class="btn btn-outline-secondary">Go Back</a>
                 </div>
 

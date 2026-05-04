@@ -1,6 +1,7 @@
 <?php
 require 'includes/functions.php';
 $config = require 'config.php';
+$base   = rtrim($config['base_path'] ?? '/', '/');
 $active = 'privacy';
 ?>
 <!DOCTYPE html>
@@ -11,7 +12,7 @@ $active = 'privacy';
     <title><?= html('Privacy Policy | ' . $config['blog_name']) ?></title>
     <meta name="description" content="Privacy policy for <?= html($config['blog_name']) ?>.">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="assets/css/style.css" rel="stylesheet">
+    <link href="<?= $base ?>/assets/css/style.css" rel="stylesheet">
 </head>
 <body>
     <?php include 'includes/header.php'; ?>
@@ -20,7 +21,7 @@ $active = 'privacy';
         <h1>Privacy Policy</h1>
         <p>This site is a portfolio project and does not collect personal data.</p>
         <p>Any information you submit through contact forms or email is handled as described in the policy above.</p>
-        <a href="index.php" class="btn btn-primary mt-4">Back to Blog</a>
+        <a href="<?= $base ?>/" class="btn btn-primary mt-4">Back to Blog</a>
     </main>
 
     <?php include 'includes/footer.php'; ?>

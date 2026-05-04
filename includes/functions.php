@@ -114,7 +114,7 @@ function findMarkdownBySlug($slug, $dir) {
     return false;
 }
 
-function generateMenu($pagesDir, $activeSlug = '') {
+function generateMenu($pagesDir, $activeSlug = '', $basePath = '/') {
     $menuItems = '';
     $files = scandir($pagesDir);
     $excludeSlugs = ['privacy', 'terms'];
@@ -139,7 +139,7 @@ function generateMenu($pagesDir, $activeSlug = '') {
         $activeClass = $slug === normalizeSlug($activeSlug) ? 'active' : '';
 
         $menuItems .= "<li class='nav-item'>";
-        $menuItems .= "<a class='nav-link $activeClass' href='page.php?slug=" . urlencode($slug) . "'>" . html($title) . "</a>";
+        $menuItems .= "<a class='nav-link $activeClass' href='" . rtrim($basePath, '/') . "/page/" . urlencode($slug) . "'>" . html($title) . "</a>";
         $menuItems .= "</li>\n";
     }
 

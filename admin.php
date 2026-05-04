@@ -6,6 +6,8 @@ $config = require __DIR__ . '/config.php';
 define('POSTS_DIR', __DIR__ . '/posts');
 define('PAGES_DIR', __DIR__ . '/pages');
 
+$base = rtrim($config['base_path'] ?? '/', '/');
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function isPost(): bool {
@@ -214,7 +216,7 @@ if ($action === 'delete-media' && isPost()) {
 
 if ($action === 'save-settings' && isPost()) {
     $configPath = __DIR__ . '/config.php';
-    $keys = ['domain','site_url','blog_name','tagline','short_name','author_name',
+    $keys = ['site_url','blog_name','tagline','short_name','author_name',
              'footer_text','privacy_policy_link','terms_service_link','default_image',
              'admin_user','admin_pass'];
     $out = "<?php\nreturn [\n";
@@ -274,7 +276,7 @@ $typeLabelPlural = $type === 'page' ? 'Pages' : 'Posts';
 <nav class="navbar navbar-dark bg-dark px-3">
     <span class="navbar-brand fw-bold"><?= e($config['blog_name']) ?> — Admin</span>
     <div class="d-flex gap-2">
-        <a href="index.php" target="_blank" class="btn btn-sm btn-outline-light">View blog</a>
+        <a href="<?= $base ?>/" target="_blank" class="btn btn-sm btn-outline-light">View blog</a>
         <a href="admin.php?action=logout" class="btn btn-sm btn-danger">Logout</a>
     </div>
 </nav>
@@ -435,7 +437,7 @@ $formTitle  = $isEdit ? "Edit $typeLabel" : "New $typeLabel";
         </button>
         <a href="admin.php?type=<?= $type ?>" class="btn btn-outline-secondary">Cancel</a>
         <?php if ($isEdit): ?>
-            <a href="<?= $type === 'post' ? 'post.php' : 'page.php' ?>?slug=<?= urlencode($slug) ?>"
+            <a href="<?= $base ?>/<?= $type === 'post' ? 'post' : 'page' ?>/<?= urlencode($slug) ?>"
                target="_blank" class="btn btn-outline-info ms-auto">View published ↗</a>
         <?php endif; ?>
     </div>
@@ -515,10 +517,6 @@ $baseUrl  = $protocol . '://' . $_SERVER['HTTP_HOST'] . rtrim(dirname($_SERVER['
         <div class="col-md-6">
             <label class="form-label fw-semibold">Site URL</label>
             <input type="url" name="site_url" class="form-control" value="<?= e($config['site_url'] ?? '') ?>" placeholder="https://example.com">
-        </div>
-        <div class="col-md-6">
-            <label class="form-label fw-semibold">Domain</label>
-            <input type="text" name="domain" class="form-control" value="<?= e($config['domain'] ?? '') ?>" placeholder="example.com/blog">
         </div>
     </div>
 </div>
