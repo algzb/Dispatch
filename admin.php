@@ -45,6 +45,21 @@ function e(string $val): string {
     return htmlspecialchars($val, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
+function csrfToken(): string {
+    if (empty($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+    return $_SESSION['csrf_token'];
+}
+
+function verifyCsrf(): void {
+    $token = $_POST['csrf_token'] ?? '';
+    if (!hash_equals($_SESSION['csrf_token'] ?? '', $token)) {
+        http_response_code(403);
+        exit('Request blocked: invalid CSRF token.');
+    }
+}
+
 // ─── Routing ──────────────────────────────────────────────────────────────────
 
 $action = $_GET['action'] ?? '';
@@ -111,6 +126,7 @@ if (empty($_SESSION['admin'])) {
 $metaKeys = ['title', 'date', 'slug', 'categories', 'tags', 'image', 'excerpt'];
 
 if ($action === 'save' && isPost()) {
+    verifyCsrf();
     $item = findMarkdownBySlug($slug, contentDir($type));
     if ($item) {
         $meta = [];
@@ -135,6 +151,7 @@ if ($action === 'save' && isPost()) {
 }
 
 if ($action === 'create' && isPost()) {
+    verifyCsrf();
     $meta = [];
     foreach ($metaKeys as $k) {
         $meta[$k] = trim($_POST[$k] ?? '');
@@ -161,6 +178,7 @@ if ($action === 'create' && isPost()) {
 }
 
 if ($action === 'delete' && isPost()) {
+    verifyCsrf();
     $item = findMarkdownBySlug($slug, contentDir($type));
     if ($item) {
         unlink(safePath($type, $item['file']));
@@ -174,6 +192,10 @@ define('UPLOADS_DIR', __DIR__ . '/assets/uploads');
 
 if ($action === 'upload' && isPost()) {
     header('Content-Type: application/json');
+    $token = $_POST['csrf_token'] ?? '';
+    if (!hash_equals($_SESSION['csrf_token'] ?? '', $token)) {
+        echo json_encode(['error' => 'Invalid CSRF token.']); exit;
+    }
     if (!is_dir(UPLOADS_DIR)) mkdir(UPLOADS_DIR, 0755, true);
 
     $file = $_FILES['image'] ?? null;
@@ -209,12 +231,14 @@ if ($action === 'upload' && isPost()) {
 }
 
 if ($action === 'delete-media' && isPost()) {
+    verifyCsrf();
     $file = basename($_POST['file'] ?? '');
     if ($file) @unlink(UPLOADS_DIR . '/' . $file);
     go('admin.php?action=media');
 }
 
 if ($action === 'save-settings' && isPost()) {
+    verifyCsrf();
     $configPath = __DIR__ . '/config.php';
     $keys = ['site_url','blog_name','tagline','short_name','author_name',
              'footer_text','privacy_policy_link','terms_service_link','default_image',
@@ -263,6 +287,7 @@ $typeLabelPlural = $type === 'page' ? 'Pages' : 'Posts';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Admin — <?= e($config['blog_name']) ?></title>
+    <meta name="csrf-token" content="<?= e(csrfToken()) ?>">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://unpkg.com/easymde/dist/easymde.min.css">
     <style>
@@ -341,6 +366,7 @@ $typeLabelPlural = $type === 'page' ? 'Pages' : 'Posts';
                           action="admin.php?action=delete&type=<?= $type ?>&slug=<?= urlencode($item['slug']) ?>"
                           class="d-inline"
                           onsubmit="return confirm('Delete \"<?= e(addslashes($item['title'])) ?>\"? This cannot be undone.')">
+                        <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
                         <button class="btn btn-sm btn-outline-danger">Delete</button>
                     </form>
                 </td>
@@ -365,6 +391,7 @@ $formTitle  = $isEdit ? "Edit $typeLabel" : "New $typeLabel";
 </div>
 
 <form method="POST" action="admin.php?action=<?= $saveAction ?>&type=<?= $type ?>&slug=<?= urlencode($slug) ?>">
+<input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
 <div class="card shadow-sm p-4">
 
     <div class="row g-3 mb-2">
@@ -483,6 +510,7 @@ $baseUrl  = $protocol . '://' . $_SERVER['HTTP_HOST'] . rtrim(dirname($_SERVER['
                             onclick="copyUrl('<?= e($url) ?>', this)">Copy URL</button>
                     <form method="POST" action="admin.php?action=delete-media"
                           onsubmit="return confirm('Delete <?= e(addslashes($file)) ?>?')">
+                        <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
                         <input type="hidden" name="file" value="<?= e($file) ?>">
                         <button class="btn btn-xs btn-outline-danger"
                                 style="font-size:.75rem;padding:.2rem .4rem">✕</button>
@@ -499,6 +527,7 @@ $baseUrl  = $protocol . '://' . $_SERVER['HTTP_HOST'] . rtrim(dirname($_SERVER['
 <!-- ── SETTINGS ──────────────────────────────────────────────────────────── -->
 <h5 class="mb-3">Settings</h5>
 <form method="POST" action="admin.php?action=save-settings">
+<input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
 <div class="card shadow-sm p-4 mb-3">
     <h6 class="text-muted text-uppercase fw-semibold mb-3" style="font-size:.75rem;letter-spacing:.08em">Site</h6>
     <div class="row g-3">
@@ -573,6 +602,8 @@ $baseUrl  = $protocol . '://' . $_SERVER['HTTP_HOST'] . rtrim(dirname($_SERVER['
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://unpkg.com/easymde/dist/easymde.min.js"></script>
 <script>
+const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+
 // ── EasyMDE with image upload ──────────────────────────────────────────────
 const bodyEl = document.getElementById('body');
 if (bodyEl) {
@@ -595,6 +626,7 @@ if (bodyEl) {
         imageUploadFunction(file, onSuccess, onError) {
             const fd = new FormData();
             fd.append('image', file);
+            fd.append('csrf_token', csrfToken);
             fetch('admin.php?action=upload', { method: 'POST', body: fd })
                 .then(r => r.json())
                 .then(d => d.url ? onSuccess(d.url) : onError(d.error || 'Upload failed'))
@@ -615,6 +647,7 @@ if (mediaUpload) {
 
         const fd = new FormData();
         fd.append('image', file);
+        fd.append('csrf_token', csrfToken);
         fetch('admin.php?action=upload', { method: 'POST', body: fd })
             .then(r => r.json())
             .then(d => {
@@ -669,6 +702,7 @@ if (featuredUpload) {
 
         const fd = new FormData();
         fd.append('image', file);
+        fd.append('csrf_token', csrfToken);
         fetch('admin.php?action=upload', { method: 'POST', body: fd })
             .then(r => r.json())
             .then(d => {
