@@ -21,8 +21,18 @@ RewriteRule ^feed\.xml$              feed.php        [L]
 # Admin panel (preserves ?action=, ?type=, etc.)
 RewriteRule ^admin/?$                admin.php       [QSA,L]
 
+# Blog index (preserves ?page=N)
+RewriteRule ^blog/?$                 blog.php        [QSA,L]
+
+# Contact page
+RewriteRule ^contact/?$              contact.php     [QSA,L]
+
 # Individual post
 RewriteRule ^post/([^/]+)/?$         post.php?slug=$1   [QSA,L]
+
+# Store index and individual product
+RewriteRule ^store/?$                store.php           [L]
+RewriteRule ^product/([^/]+)/?$      product.php?slug=$1 [QSA,L]
 
 # Static page
 RewriteRule ^page/([^/]+)/?$         page.php?slug=$1   [QSA,L]

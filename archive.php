@@ -48,21 +48,13 @@ $totalPages  = (int) ceil($totalPosts / $perPage);
 $currentPage = max(1, min($totalPages ?: 1, (int) ($_GET['page'] ?? 1)));
 $pagedPosts  = array_slice($filteredPosts, ($currentPage - 1) * $perPage, $perPage);
 
-$base   = rtrim($config['base_path'] ?? '/', '/');
-$active = '';
+$base      = rtrim($config['base_path'] ?? '/', '/');
+$active    = '';
+$headTitle = $pageTitle . ' | ' . $config['blog_name'];
+$headDesc  = $config['tagline'];
+
+include 'includes/header.php';
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= html($pageTitle . ' | ' . $config['blog_name']) ?></title>
-    <meta name="description" content="<?= html($config['tagline']) ?>">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="<?= $base ?>/assets/css/style.css" rel="stylesheet">
-</head>
-<body>
-<?php include 'includes/header.php'; ?>
 
 <main class="container my-5">
 
@@ -166,6 +158,3 @@ $active = '';
 </main>
 
 <?php include 'includes/footer.php'; ?>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>

@@ -192,7 +192,7 @@ function formatDate($dateString, $format = 'F j, Y') {
     return $date ? date_format($date, $format) : $dateString;
 }
 
-// Build the <title> tag value. Falls back to blog_name when the post has no title.
+// Build the <title> tag value. Falls back to the site name when the page has no title.
 function pageTitle($metadata, $config, $default = '') {
     if (!empty($metadata['title'])) {
         return $metadata['title'] . ' | ' . $config['blog_name'];
@@ -207,6 +207,59 @@ function pageDescription($metadata, $config) {
     }
 
     return $config['tagline'];
+}
+
+// Convert a hex color string to an "r, g, b" string for use in rgba().
+function hexToRgb(string $hex): string
+{
+    $hex = ltrim($hex, '#');
+    if (strlen($hex) === 3) {
+        $hex = $hex[0].$hex[0].$hex[1].$hex[1].$hex[2].$hex[2];
+    }
+    return hexdec(substr($hex, 0, 2)) . ', ' . hexdec(substr($hex, 2, 2)) . ', ' . hexdec(substr($hex, 4, 2));
+}
+
+// Darken a hex color by multiplying each channel by $factor (0–1).
+function hexDarken(string $hex, float $factor = 0.85): string
+{
+    $hex = ltrim($hex, '#');
+    if (strlen($hex) === 3) {
+        $hex = $hex[0].$hex[0].$hex[1].$hex[1].$hex[2].$hex[2];
+    }
+    $r = str_pad(dechex(max(0, min(255, (int) round(hexdec(substr($hex, 0, 2)) * $factor)))), 2, '0', STR_PAD_LEFT);
+    $g = str_pad(dechex(max(0, min(255, (int) round(hexdec(substr($hex, 2, 2)) * $factor)))), 2, '0', STR_PAD_LEFT);
+    $b = str_pad(dechex(max(0, min(255, (int) round(hexdec(substr($hex, 4, 2)) * $factor)))), 2, '0', STR_PAD_LEFT);
+    return '#' . $r . $g . $b;
+}
+
+// Verify a reCAPTCHA v2 response token against Google's API.
+// Returns true when the token is valid, false on failure or when the secret is empty.
+function verifyRecaptcha(string $secret, string $token): bool
+{
+    if ($secret === '' || $token === '') return false;
+
+    $url  = 'https://www.google.com/recaptcha/api/siteverify';
+    $data = http_build_query(['secret' => $secret, 'response' => $token, 'remoteip' => $_SERVER['REMOTE_ADDR'] ?? '']);
+
+    if (function_exists('curl_init')) {
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => $data,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT        => 5,
+        ]);
+        $response = curl_exec($ch);
+        curl_close($ch);
+    } else {
+        $response = file_get_contents($url, false, stream_context_create([
+            'http' => ['method' => 'POST', 'header' => 'Content-Type: application/x-www-form-urlencoded', 'content' => $data, 'timeout' => 5],
+        ]));
+    }
+
+    if (!$response) return false;
+    $json = json_decode($response, true);
+    return !empty($json['success']);
 }
 
 // Estimate reading time in minutes. Minimum of 1 minute regardless of word count.

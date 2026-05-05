@@ -3,11 +3,6 @@ body {
     color: #212529;
 }
 
-.site-header {
-    background: linear-gradient(135deg, #4f73ff 0%, #2a4dc7 100%);
-    color: white;
-}
-
 .site-footer {
     background: #111827;
 }
@@ -48,6 +43,15 @@ body {
 
 .hero-content p {
     font-size: 1.05rem;
+}
+
+.feature {
+    width: 4.5rem;
+    height: 4.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.25rem;
 }
 
 .card-title {

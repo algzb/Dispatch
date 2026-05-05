@@ -3,8 +3,9 @@ session_start();
 require_once __DIR__ . '/includes/functions.php';
 $config = require __DIR__ . '/config.php';
 
-define('POSTS_DIR', __DIR__ . '/posts');
-define('PAGES_DIR', __DIR__ . '/pages');
+define('POSTS_DIR',    __DIR__ . '/posts');
+define('PAGES_DIR',    __DIR__ . '/pages');
+define('PRODUCTS_DIR', __DIR__ . '/products');
 
 $base = rtrim($config['base_path'] ?? '/', '/');
 
@@ -20,7 +21,9 @@ function go(string $url): void {
 }
 
 function contentDir(string $type): string {
-    return $type === 'page' ? PAGES_DIR : POSTS_DIR;
+    if ($type === 'page')    return PAGES_DIR;
+    if ($type === 'product') return PRODUCTS_DIR;
+    return POSTS_DIR;
 }
 
 // basename() prevents path traversal — a filename like '../../config.php' is reduced to 'config.php'.
@@ -68,7 +71,7 @@ function verifyCsrf(): void {
 // ─── Routing ──────────────────────────────────────────────────────────────────
 
 $action = $_GET['action'] ?? '';
-$type   = ($_GET['type'] ?? '') === 'page' ? 'page' : 'post';
+$type   = in_array($_GET['type'] ?? '', ['page', 'product']) ? $_GET['type'] : 'post';
 $slug   = $_GET['slug'] ?? '';
 $flash  = ['type' => '', 'msg' => ''];
 
@@ -128,7 +131,9 @@ if (empty($_SESSION['admin'])) {
 
 // ─── CRUD actions (authenticated) ─────────────────────────────────────────────
 
-$metaKeys = ['title', 'date', 'slug', 'categories', 'tags', 'image', 'excerpt'];
+$metaKeys = $type === 'product'
+    ? ['title', 'slug', 'price', 'currency', 'buy_url', 'stock', 'image', 'excerpt']
+    : ['title', 'date', 'slug', 'categories', 'tags', 'image', 'excerpt'];
 
 if ($action === 'save' && isPost()) {
     verifyCsrf();
@@ -165,7 +170,9 @@ if ($action === 'create' && isPost()) {
         $meta['image'] = $_SESSION['featured_image_url'];
     }
     unset($_SESSION['featured_image_url']);
-    $meta['date'] = $meta['date'] ?: date('Y-m-d');
+    if ($type !== 'product') {
+        $meta['date'] = $meta['date'] ?: date('Y-m-d');
+    }
     $meta['slug'] = normalizeSlug($meta['slug'] ?: $meta['title']);
     $body = $_POST['body'] ?? '';
 
@@ -245,18 +252,33 @@ if ($action === 'delete-media' && isPost()) {
 if ($action === 'save-settings' && isPost()) {
     verifyCsrf();
     $configPath = __DIR__ . '/config.php';
+    $checkboxKeys = ['hero_active','features_active','testimonial_active','articles_active','cta_active','contact_active','colors_active'];
     $formKeys = ['site_url','blog_name','tagline','short_name','author_name',
                  'footer_text','privacy_policy_link','terms_service_link','default_image',
+                 'hero_active','hero_title','hero_description','hero_image','hero_button_text','hero_button_url',
+                 'features_active','features_heading',
+                 'feature_1_icon','feature_1_title','feature_1_text',
+                 'feature_2_icon','feature_2_title','feature_2_text',
+                 'feature_3_icon','feature_3_title','feature_3_text',
+                 'feature_4_icon','feature_4_title','feature_4_text',
+                 'testimonial_active','testimonial_quote','testimonial_author','testimonial_role','testimonial_avatar',
+                 'articles_active','articles_heading','articles_subtitle',
+                 'cta_active','cta_title','cta_text','cta_button_text','cta_button_url',
+                 'contact_active','contact_title','contact_subtitle','contact_email','contact_success','mail_from_name',
+                 'recaptcha_site_key','recaptcha_secret_key',
+                 'colors_active','color_primary','color_dark',
                  'admin_user','admin_pass'];
     $new = $config;
     foreach ($formKeys as $k) {
-        $v = trim($_POST[$k] ?? '');
-        if ($k === 'admin_pass') {
+        if (in_array($k, $checkboxKeys)) {
+            $new[$k] = isset($_POST[$k]) ? '1' : '';
+        } elseif ($k === 'admin_pass') {
+            $v = trim($_POST[$k] ?? '');
             if ($v !== '') {
                 $new[$k] = password_hash($v, PASSWORD_DEFAULT);
             }
         } else {
-            $new[$k] = $v;
+            $new[$k] = trim($_POST[$k] ?? '');
         }
     }
     file_put_contents($configPath, '<?php' . "\nreturn " . var_export($new, true) . ";\n");
@@ -282,8 +304,8 @@ if (!empty($_GET['saved'])) {
     $flash = ['type' => 'success', 'msg' => 'Saved successfully.'];
 }
 
-$typeLabel       = $type === 'page' ? 'Page' : 'Post';
-$typeLabelPlural = $type === 'page' ? 'Pages' : 'Posts';
+$typeLabel       = $type === 'page' ? 'Page' : ($type === 'product' ? 'Product' : 'Post');
+$typeLabelPlural = $type === 'page' ? 'Pages' : ($type === 'product' ? 'Products' : 'Posts');
 
 // ─── HTML ─────────────────────────────────────────────────────────────────────
 ?>
@@ -307,7 +329,7 @@ $typeLabelPlural = $type === 'page' ? 'Pages' : 'Posts';
 <nav class="navbar navbar-dark bg-dark px-3">
     <span class="navbar-brand fw-bold"><?= e($config['blog_name']) ?> — Admin</span>
     <div class="d-flex gap-2">
-        <a href="<?= $base ?>/" target="_blank" class="btn btn-sm btn-outline-light">View blog</a>
+        <a href="<?= $base ?>/" target="_blank" class="btn btn-sm btn-outline-light">View site</a>
         <a href="admin.php?action=logout" class="btn btn-sm btn-danger">Logout</a>
     </div>
 </nav>
@@ -320,6 +342,7 @@ $typeLabelPlural = $type === 'page' ? 'Pages' : 'Posts';
     <div class="d-flex flex-column gap-1">
         <a href="admin.php?type=post" class="btn btn-sm <?= $type === 'post' && $view !== 'settings' ? 'btn-primary' : 'btn-outline-secondary' ?>">Posts</a>
         <a href="admin.php?type=page" class="btn btn-sm <?= $type === 'page' && $view !== 'settings' ? 'btn-primary' : 'btn-outline-secondary' ?>">Pages</a>
+        <a href="admin.php?type=product" class="btn btn-sm <?= $type === 'product' && $view !== 'settings' ? 'btn-primary' : 'btn-outline-secondary' ?>">Products</a>
         <a href="admin.php?action=media" class="btn btn-sm <?= $view === 'media' ? 'btn-primary' : 'btn-outline-secondary' ?>">Media</a>
         <a href="admin.php?action=settings" class="btn btn-sm <?= $view === 'settings' ? 'btn-primary' : 'btn-outline-secondary' ?>">Settings</a>
         <hr class="my-2">
@@ -352,7 +375,7 @@ $typeLabelPlural = $type === 'page' ? 'Pages' : 'Posts';
             <tr>
                 <th>Title</th>
                 <th>Slug</th>
-                <th>Date</th>
+                <th><?= $type === 'product' ? 'Price' : 'Date' ?></th>
                 <th></th>
             </tr>
         </thead>
@@ -364,7 +387,7 @@ $typeLabelPlural = $type === 'page' ? 'Pages' : 'Posts';
             <tr>
                 <td><?= e($item['title']) ?></td>
                 <td><code class="text-muted"><?= e($item['slug']) ?></code></td>
-                <td><?= e($item['date']) ?></td>
+                <td><?= $type === 'product' ? e(($item['metadata']['currency'] ?? 'USD') . ' ' . ($item['metadata']['price'] ?? '—')) : e($item['date']) ?></td>
                 <td class="text-end">
                     <a href="admin.php?action=edit&type=<?= $type ?>&slug=<?= urlencode($item['slug']) ?>"
                        class="btn btn-sm btn-outline-primary">Edit</a>
@@ -406,19 +429,46 @@ $formTitle  = $isEdit ? "Edit $typeLabel" : "New $typeLabel";
             <input type="text" name="title" class="form-control"
                    value="<?= e($m['title'] ?? '') ?>" required>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-<?= $type === 'product' ? '6' : '3' ?>">
             <label class="form-label fw-semibold">Slug</label>
             <input type="text" name="slug" class="form-control"
                    value="<?= e($m['slug'] ?? '') ?>" placeholder="auto from title">
         </div>
+        <?php if ($type !== 'product'): ?>
         <div class="col-md-3">
             <label class="form-label fw-semibold">Date</label>
             <input type="date" name="date" class="form-control"
                    value="<?= e($m['date'] ?? date('Y-m-d')) ?>">
         </div>
+        <?php endif; ?>
     </div>
 
-    <?php if ($type === 'post'): ?>
+    <?php if ($type === 'product'): ?>
+    <div class="row g-3 mb-2">
+        <div class="col-md-3">
+            <label class="form-label fw-semibold">Price</label>
+            <input type="text" name="price" class="form-control"
+                   value="<?= e($m['price'] ?? '') ?>" placeholder="29.99">
+        </div>
+        <div class="col-md-2">
+            <label class="form-label fw-semibold">Currency</label>
+            <input type="text" name="currency" class="form-control"
+                   value="<?= e($m['currency'] ?? 'USD') ?>" placeholder="USD">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label fw-semibold">Stock</label>
+            <select name="stock" class="form-select">
+                <option value="In Stock" <?= ($m['stock'] ?? '') === 'In Stock' ? 'selected' : '' ?>>In Stock</option>
+                <option value="Out of Stock" <?= ($m['stock'] ?? '') === 'Out of Stock' ? 'selected' : '' ?>>Out of Stock</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label fw-semibold">Buy URL</label>
+            <input type="url" name="buy_url" class="form-control"
+                   value="<?= e($m['buy_url'] ?? '') ?>" placeholder="https://buy.stripe.com/...">
+        </div>
+    </div>
+    <?php elseif ($type === 'post'): ?>
     <div class="row g-3 mb-2">
         <div class="col-md-6">
             <label class="form-label fw-semibold">Categories</label>
@@ -470,7 +520,8 @@ $formTitle  = $isEdit ? "Edit $typeLabel" : "New $typeLabel";
         </button>
         <a href="admin.php?type=<?= $type ?>" class="btn btn-outline-secondary">Cancel</a>
         <?php if ($isEdit): ?>
-            <a href="<?= $base ?>/<?= $type === 'post' ? 'post' : 'page' ?>/<?= urlencode($slug) ?>"
+            <?php $viewPath = $type === 'post' ? 'post' : ($type === 'product' ? 'product' : 'page'); ?>
+            <a href="<?= $base ?>/<?= $viewPath ?>/<?= urlencode($slug) ?>"
                target="_blank" class="btn btn-outline-info ms-auto">View published ↗</a>
         <?php endif; ?>
     </div>
@@ -534,11 +585,46 @@ $baseUrl  = $protocol . '://' . $_SERVER['HTTP_HOST'] . rtrim(dirname($_SERVER['
 <h5 class="mb-3">Settings</h5>
 <form method="POST" action="admin.php?action=save-settings">
 <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
+
+<div class="card shadow-sm p-4 mb-3">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <h6 class="text-muted text-uppercase fw-semibold mb-0" style="font-size:.75rem;letter-spacing:.08em">Colors</h6>
+        <div class="form-check form-switch mb-0">
+            <input class="form-check-input" type="checkbox" role="switch"
+                   name="colors_active" id="colorsActive"
+                   value="1" <?= !empty($config['colors_active']) ? 'checked' : '' ?>>
+            <label class="form-check-label" for="colorsActive">Use custom colors</label>
+        </div>
+    </div>
+    <div class="row g-3 align-items-end">
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">Primary color</label>
+            <div class="form-text mb-1">Buttons, badges, links, active states.</div>
+            <div class="d-flex align-items-center gap-2">
+                <input type="color" name="color_primary" class="form-control form-control-color"
+                       value="<?= e($config['color_primary'] ?? '#0d6efd') ?>" title="Primary color">
+                <input type="text" id="colorPrimaryText" class="form-control form-control-sm font-monospace"
+                       value="<?= e($config['color_primary'] ?? '#0d6efd') ?>" maxlength="7" placeholder="#0d6efd">
+            </div>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">Dark color</label>
+            <div class="form-text mb-1">Navbar, page headers, footer.</div>
+            <div class="d-flex align-items-center gap-2">
+                <input type="color" name="color_dark" class="form-control form-control-color"
+                       value="<?= e($config['color_dark'] ?? '#212529') ?>" title="Dark color">
+                <input type="text" id="colorDarkText" class="form-control form-control-sm font-monospace"
+                       value="<?= e($config['color_dark'] ?? '#212529') ?>" maxlength="7" placeholder="#212529">
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="card shadow-sm p-4 mb-3">
     <h6 class="text-muted text-uppercase fw-semibold mb-3" style="font-size:.75rem;letter-spacing:.08em">Site</h6>
     <div class="row g-3">
         <div class="col-md-6">
-            <label class="form-label fw-semibold">Blog name</label>
+            <label class="form-label fw-semibold">Site name</label>
             <input type="text" name="blog_name" class="form-control" value="<?= e($config['blog_name'] ?? '') ?>">
         </div>
         <div class="col-md-6">
@@ -552,6 +638,231 @@ $baseUrl  = $protocol . '://' . $_SERVER['HTTP_HOST'] . rtrim(dirname($_SERVER['
         <div class="col-md-6">
             <label class="form-label fw-semibold">Site URL</label>
             <input type="url" name="site_url" class="form-control" value="<?= e($config['site_url'] ?? '') ?>" placeholder="https://example.com">
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm p-4 mb-3">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <h6 class="text-muted text-uppercase fw-semibold mb-0" style="font-size:.75rem;letter-spacing:.08em">Homepage hero</h6>
+        <div class="form-check form-switch mb-0">
+            <input class="form-check-input" type="checkbox" role="switch"
+                   name="hero_active" id="heroActive"
+                   value="1" <?= !empty($config['hero_active']) ? 'checked' : '' ?>>
+            <label class="form-check-label" for="heroActive">Show section</label>
+        </div>
+    </div>
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">Title</label>
+            <input type="text" name="hero_title" class="form-control" value="<?= e($config['hero_title'] ?? '') ?>">
+        </div>
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">Description</label>
+            <input type="text" name="hero_description" class="form-control" value="<?= e($config['hero_description'] ?? '') ?>">
+        </div>
+        <div class="col-12">
+            <label class="form-label fw-semibold">Hero image</label>
+            <input type="hidden" name="hero_image" id="heroImageField" value="<?= e($config['hero_image'] ?? '') ?>">
+            <div class="input-group">
+                <input type="text" id="heroImageUrl" class="form-control"
+                       value="<?= e($config['hero_image'] ?? '') ?>" placeholder="https://...">
+                <label class="btn btn-outline-secondary mb-0" title="Upload hero image">
+                    <span id="heroUploadLabel">Upload</span>
+                    <input type="file" id="heroImageUpload" accept="image/*" class="d-none">
+                </label>
+            </div>
+            <div id="heroImagePreview" class="mt-2" style="<?= !empty($config['hero_image']) ? '' : 'display:none' ?>">
+                <img src="<?= e($config['hero_image'] ?? '') ?>" alt="Hero preview"
+                     style="max-height:120px;border-radius:6px;object-fit:cover;">
+            </div>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">Button text</label>
+            <input type="text" name="hero_button_text" class="form-control" value="<?= e($config['hero_button_text'] ?? '') ?>" placeholder="Learn more">
+        </div>
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">Button URL</label>
+            <input type="url" name="hero_button_url" class="form-control" value="<?= e($config['hero_button_url'] ?? '') ?>" placeholder="Leave blank to scroll to posts">
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm p-4 mb-3">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <h6 class="text-muted text-uppercase fw-semibold mb-0" style="font-size:.75rem;letter-spacing:.08em">Features section</h6>
+        <div class="form-check form-switch mb-0">
+            <input class="form-check-input" type="checkbox" role="switch"
+                   name="features_active" id="featuresActive"
+                   value="1" <?= !empty($config['features_active']) ? 'checked' : '' ?>>
+            <label class="form-check-label" for="featuresActive">Show section</label>
+        </div>
+    </div>
+    <div class="mb-3">
+        <label class="form-label fw-semibold">Section heading</label>
+        <input type="text" name="features_heading" class="form-control" value="<?= e($config['features_heading'] ?? '') ?>">
+    </div>
+    <div class="alert alert-light border mb-3 py-2 px-3 small">
+        <strong>Choosing icons:</strong> browse the full library at
+        <a href="https://icons.getbootstrap.com/" target="_blank" rel="noopener">icons.getbootstrap.com</a>,
+        search for the icon you want, and copy its name (e.g. <code>bi-star</code>, <code>bi-envelope</code>, <code>bi-shield-check</code>).
+        Paste that name into the Icon field below.
+    </div>
+    <?php for ($i = 1; $i <= 4; $i++): ?>
+    <div class="border rounded p-3 mb-3">
+        <div class="fw-semibold mb-2">Feature <?= $i ?></div>
+        <div class="row g-2">
+            <div class="col-md-3">
+                <label class="form-label small fw-semibold">Icon</label>
+                <input type="text" name="feature_<?= $i ?>_icon" class="form-control form-control-sm"
+                       value="<?= e($config["feature_{$i}_icon"] ?? '') ?>" placeholder="bi-star">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-semibold">Title</label>
+                <input type="text" name="feature_<?= $i ?>_title" class="form-control form-control-sm"
+                       value="<?= e($config["feature_{$i}_title"] ?? '') ?>">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label small fw-semibold">Text</label>
+                <input type="text" name="feature_<?= $i ?>_text" class="form-control form-control-sm"
+                       value="<?= e($config["feature_{$i}_text"] ?? '') ?>">
+            </div>
+        </div>
+    </div>
+    <?php endfor; ?>
+</div>
+
+<div class="card shadow-sm p-4 mb-3">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <h6 class="text-muted text-uppercase fw-semibold mb-0" style="font-size:.75rem;letter-spacing:.08em">Testimonial</h6>
+        <div class="form-check form-switch mb-0">
+            <input class="form-check-input" type="checkbox" role="switch"
+                   name="testimonial_active" id="testimonialActive"
+                   value="1" <?= !empty($config['testimonial_active']) ? 'checked' : '' ?>>
+            <label class="form-check-label" for="testimonialActive">Show section</label>
+        </div>
+    </div>
+    <div class="row g-3">
+        <div class="col-12">
+            <label class="form-label fw-semibold">Quote</label>
+            <input type="text" name="testimonial_quote" class="form-control" value="<?= e($config['testimonial_quote'] ?? '') ?>">
+        </div>
+        <div class="col-md-4">
+            <label class="form-label fw-semibold">Author</label>
+            <input type="text" name="testimonial_author" class="form-control" value="<?= e($config['testimonial_author'] ?? '') ?>">
+        </div>
+        <div class="col-md-4">
+            <label class="form-label fw-semibold">Role</label>
+            <input type="text" name="testimonial_role" class="form-control" value="<?= e($config['testimonial_role'] ?? '') ?>">
+        </div>
+        <div class="col-md-4">
+            <label class="form-label fw-semibold">Avatar URL</label>
+            <input type="url" name="testimonial_avatar" class="form-control" value="<?= e($config['testimonial_avatar'] ?? '') ?>" placeholder="https://...">
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm p-4 mb-3">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <h6 class="text-muted text-uppercase fw-semibold mb-0" style="font-size:.75rem;letter-spacing:.08em">Articles section</h6>
+        <div class="form-check form-switch mb-0">
+            <input class="form-check-input" type="checkbox" role="switch"
+                   name="articles_active" id="articlesActive"
+                   value="1" <?= !empty($config['articles_active']) ? 'checked' : '' ?>>
+            <label class="form-check-label" for="articlesActive">Show section</label>
+        </div>
+    </div>
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">Heading</label>
+            <input type="text" name="articles_heading" class="form-control" value="<?= e($config['articles_heading'] ?? '') ?>">
+        </div>
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">Subtitle</label>
+            <input type="text" name="articles_subtitle" class="form-control" value="<?= e($config['articles_subtitle'] ?? '') ?>">
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm p-4 mb-3">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <h6 class="text-muted text-uppercase fw-semibold mb-0" style="font-size:.75rem;letter-spacing:.08em">Call to action banner</h6>
+        <div class="form-check form-switch mb-0">
+            <input class="form-check-input" type="checkbox" role="switch"
+                   name="cta_active" id="ctaActive"
+                   value="1" <?= !empty($config['cta_active']) ? 'checked' : '' ?>>
+            <label class="form-check-label" for="ctaActive">Show section</label>
+        </div>
+    </div>
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">Title</label>
+            <input type="text" name="cta_title" class="form-control" value="<?= e($config['cta_title'] ?? '') ?>">
+        </div>
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">Text</label>
+            <input type="text" name="cta_text" class="form-control" value="<?= e($config['cta_text'] ?? '') ?>">
+        </div>
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">Button text</label>
+            <input type="text" name="cta_button_text" class="form-control" value="<?= e($config['cta_button_text'] ?? '') ?>" placeholder="Contact us">
+        </div>
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">Button URL</label>
+            <input type="url" name="cta_button_url" class="form-control" value="<?= e($config['cta_button_url'] ?? '') ?>" placeholder="Leave blank to link to home">
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm p-4 mb-3">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <h6 class="text-muted text-uppercase fw-semibold mb-0" style="font-size:.75rem;letter-spacing:.08em">Contact page</h6>
+        <div class="form-check form-switch mb-0">
+            <input class="form-check-input" type="checkbox" role="switch"
+                   name="contact_active" id="contactActive"
+                   value="1" <?= !empty($config['contact_active']) ? 'checked' : '' ?>>
+            <label class="form-check-label" for="contactActive">Show in nav</label>
+        </div>
+    </div>
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">Page title</label>
+            <input type="text" name="contact_title" class="form-control" value="<?= e($config['contact_title'] ?? '') ?>">
+        </div>
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">Subtitle</label>
+            <input type="text" name="contact_subtitle" class="form-control" value="<?= e($config['contact_subtitle'] ?? '') ?>">
+        </div>
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">Recipient email <span class="text-danger">*</span></label>
+            <input type="email" name="contact_email" class="form-control" value="<?= e($config['contact_email'] ?? '') ?>" placeholder="you@example.com">
+            <div class="form-text">Where form submissions are delivered.</div>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">From name</label>
+            <input type="text" name="mail_from_name" class="form-control" value="<?= e($config['mail_from_name'] ?? '') ?>" placeholder="Defaults to site name">
+        </div>
+        <div class="col-12">
+            <label class="form-label fw-semibold">Success message</label>
+            <input type="text" name="contact_success" class="form-control" value="<?= e($config['contact_success'] ?? '') ?>">
+        </div>
+        <div class="col-12"><hr class="my-1"></div>
+        <div class="col-12">
+            <p class="fw-semibold mb-1">reCAPTCHA v2 <span class="text-muted fw-normal small">(optional)</span></p>
+            <p class="text-muted small mb-2">
+                Get your keys at <a href="https://www.google.com/recaptcha/admin/create" target="_blank" rel="noopener">google.com/recaptcha</a>.
+                Choose <strong>reCAPTCHA v2 → "I'm not a robot" checkbox</strong>. Leave both fields blank to disable.
+            </p>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">Site key <span class="text-muted fw-normal small">(public)</span></label>
+            <input type="text" name="recaptcha_site_key" class="form-control font-monospace"
+                   value="<?= e($config['recaptcha_site_key'] ?? '') ?>" placeholder="6Lc…">
+        </div>
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">Secret key <span class="text-muted fw-normal small">(private)</span></label>
+            <input type="password" name="recaptcha_secret_key" class="form-control font-monospace"
+                   value="<?= e($config['recaptcha_secret_key'] ?? '') ?>" placeholder="6Lc…">
         </div>
     </div>
 </div>
@@ -725,6 +1036,68 @@ if (featuredUpload) {
         setFeaturedImage(this.value.trim());
     });
 }
+
+// ── Hero image upload (Settings page) ─────────────────────────────────────
+function setHeroImage(url) {
+    document.getElementById('heroImageField').value = url;
+    document.getElementById('heroImageUrl').value   = url;
+    const preview = document.getElementById('heroImagePreview');
+    if (url) {
+        preview.querySelector('img').src = url;
+        preview.style.display = '';
+    } else {
+        preview.style.display = 'none';
+    }
+}
+
+const heroUpload = document.getElementById('heroImageUpload');
+if (heroUpload) {
+    heroUpload.addEventListener('change', function () {
+        const file = this.files[0];
+        if (!file) return;
+        const label = document.getElementById('heroUploadLabel');
+        label.textContent = 'Uploading…';
+
+        const fd = new FormData();
+        fd.append('image', file);
+        fd.append('csrf_token', csrfToken);
+        fetch('admin.php?action=upload', { method: 'POST', body: fd })
+            .then(r => r.json())
+            .then(d => {
+                if (d.url) { setHeroImage(d.url); }
+                else { alert(d.error || 'Upload failed.'); }
+                label.textContent = 'Upload';
+            })
+            .catch(() => { alert('Upload failed.'); label.textContent = 'Upload'; });
+        this.value = '';
+    });
+
+    document.getElementById('heroImageUrl').addEventListener('input', function () {
+        setHeroImage(this.value.trim());
+    });
+
+    // Sync hidden field on settings form submit
+    const settingsForm = document.querySelector('form[action*="action=save-settings"]');
+    if (settingsForm) {
+        settingsForm.addEventListener('submit', function () {
+            document.getElementById('heroImageField').value =
+                document.getElementById('heroImageUrl').value.trim();
+        });
+    }
+}
+
+// ── Color picker ↔ text input sync ───────────────────────────────────────
+function syncColor(pickerId, textId) {
+    const picker = document.querySelector('[name="' + pickerId + '"]');
+    const text   = document.getElementById(textId);
+    if (!picker || !text) return;
+    picker.addEventListener('input', () => text.value = picker.value);
+    text.addEventListener('input', () => {
+        if (/^#[0-9a-fA-F]{6}$/.test(text.value)) picker.value = text.value;
+    });
+}
+syncColor('color_primary', 'colorPrimaryText');
+syncColor('color_dark',    'colorDarkText');
 
 // ── Copy URL to clipboard ──────────────────────────────────────────────────
 function copyUrl(url, btn) {
