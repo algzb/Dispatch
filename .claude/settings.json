@@ -10,7 +10,10 @@
       "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\angel\\\\Documents\\\\GitHub\\\\Simple-PHP-Markdown-Blog\" -Recurse -Force)",
       "Bash(Select-Object FullName)",
       "Bash(grep -n \"\\\\.\\\\.\\\\|\\\\.\\\\/\\\\|\\\\.\\\\\\\\\\\\\\\\|directory\\\\|folder\" \"c:\\\\Users\\\\angel\\\\Documents\\\\GitHub\\\\Simple-PHP-Markdown-Blog\\\\admin.php\")",
-      "Read(//c/Users/angel/Documents/GitHub/**)"
+      "Read(//c/Users/angel/Documents/GitHub/**)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git tag *)"
     ]
   }
 }
