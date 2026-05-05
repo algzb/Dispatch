@@ -23,6 +23,7 @@ function contentDir(string $type): string {
     return $type === 'page' ? PAGES_DIR : POSTS_DIR;
 }
 
+// basename() prevents path traversal — a filename like '../../config.php' is reduced to 'config.php'.
 function safePath(string $type, string $filename): string {
     return contentDir($type) . DIRECTORY_SEPARATOR . basename($filename);
 }
@@ -45,6 +46,8 @@ function e(string $val): string {
     return htmlspecialchars($val, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
+// Generate (or retrieve) the session CSRF token. Called lazily so the token is only
+// created after a successful login, never on the public login form.
 function csrfToken(): string {
     if (empty($_SESSION['csrf_token'])) {
         $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
@@ -52,6 +55,8 @@ function csrfToken(): string {
     return $_SESSION['csrf_token'];
 }
 
+// Verify the CSRF token submitted with a POST request.
+// hash_equals() prevents timing attacks that could leak the token via response time.
 function verifyCsrf(): void {
     $token = $_POST['csrf_token'] ?? '';
     if (!hash_equals($_SESSION['csrf_token'] ?? '', $token)) {

@@ -21,7 +21,8 @@ if ($post) {
     $pageDescription = pageDescription($metadata, $config);
     $readingTime = calculateReadingTime($post['content']);
 } else {
-    header('Location: ' . rtrim($config['base_path'] ?? '/', '/') . '/404.php', true, 404);
+    http_response_code(404);
+    require __DIR__ . '/404.php';
     exit;
 }
 $base   = rtrim($config['base_path'] ?? '/', '/');

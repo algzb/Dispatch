@@ -11,6 +11,10 @@ RewriteCond %{REQUEST_FILENAME} -f [OR]
 RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^ - [L]
 
+# Sitemap and robots
+RewriteRule ^sitemap\.xml$           sitemap.php     [L]
+RewriteRule ^robots\.txt$            robots.php      [L]
+
 # RSS feed
 RewriteRule ^feed\.xml$              feed.php        [L]
 
@@ -35,3 +39,4 @@ RewriteRule ^archive/?$              archive.php     [L]
 </IfModule>
 
 ErrorDocument 404 /404.php
+ErrorDocument 500 /500.php

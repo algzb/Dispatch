@@ -1,5 +1,5 @@
 <?php
-require 'includes/functions.php';
+require_once 'includes/functions.php';
 $config = require 'config.php';
 $base   = rtrim($config['base_path'] ?? '/', '/');
 ?>

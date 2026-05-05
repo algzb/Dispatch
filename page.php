@@ -19,7 +19,8 @@ if ($page) {
     $pageTitle = pageTitle($metadata, $config, 'Page');
     $pageDescription = pageDescription($metadata, $config);
 } else {
-    header('Location: ' . rtrim($config['base_path'] ?? '/', '/') . '/404.php', true, 302);
+    http_response_code(404);
+    require __DIR__ . '/404.php';
     exit;
 }
 $base   = rtrim($config['base_path'] ?? '/', '/');

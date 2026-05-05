@@ -42,6 +42,12 @@ if ($filterTag !== '') {
     $pageTitle     = 'Archive';
 }
 
+$perPage     = 20;
+$totalPosts  = count($filteredPosts);
+$totalPages  = (int) ceil($totalPosts / $perPage);
+$currentPage = max(1, min($totalPages ?: 1, (int) ($_GET['page'] ?? 1)));
+$pagedPosts  = array_slice($filteredPosts, ($currentPage - 1) * $perPage, $perPage);
+
 $base   = rtrim($config['base_path'] ?? '/', '/');
 $active = '';
 ?>
@@ -61,7 +67,7 @@ $active = '';
 <main class="container my-5">
 
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="mb-0"><?= html($pageTitle) ?></h2>
+        <h2 class="mb-0"><?= html($pageTitle) ?> <span class="text-muted fw-normal fs-5">(<?= $totalPosts ?>)</span></h2>
         <?php if ($filterTag || $filterCategory): ?>
             <a href="<?= $base ?>/archive" class="btn btn-sm btn-outline-secondary">← All posts</a>
         <?php endif; ?>
@@ -100,12 +106,12 @@ $active = '';
     <?php endif; ?>
 
     <!-- ── Post list ──────────────────────────────────────────────────────── -->
-    <?php if (empty($filteredPosts)): ?>
+    <?php if (empty($pagedPosts)): ?>
         <p class="text-muted">No posts found.</p>
     <?php else: ?>
     <?php
     $grouped = [];
-    foreach ($filteredPosts as $post) {
+    foreach ($pagedPosts as $post) {
         $year = !empty($post['date']) ? date('Y', strtotime($post['date'])) : 'Unknown';
         $grouped[$year][] = $post;
     }
@@ -137,6 +143,24 @@ $active = '';
         <?php endforeach; ?>
         </ul>
     <?php endforeach; ?>
+    <?php endif; ?>
+
+    <?php if ($totalPages > 1): ?>
+    <nav class="mt-5" aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+            <li class="page-item <?= $currentPage <= 1 ? 'disabled' : '' ?>">
+                <a class="page-link" href="?page=<?= $currentPage - 1 ?>">Previous</a>
+            </li>
+            <?php for ($p = 1; $p <= $totalPages; $p++): ?>
+            <li class="page-item <?= $p === $currentPage ? 'active' : '' ?>">
+                <a class="page-link" href="?page=<?= $p ?>"><?= $p ?></a>
+            </li>
+            <?php endfor; ?>
+            <li class="page-item <?= $currentPage >= $totalPages ? 'disabled' : '' ?>">
+                <a class="page-link" href="?page=<?= $currentPage + 1 ?>">Next</a>
+            </li>
+        </ul>
+    </nav>
     <?php endif; ?>
 
 </main>

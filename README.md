@@ -80,6 +80,59 @@ Dispatch stores everything as plain `.md` files. You can read them, edit them, b
 
 ---
 
+## Nginx configuration
+
+If your server runs Nginx instead of Apache, create a server block like this. The rewrite rules mirror what `.htaccess` does for Apache.
+
+```nginx
+server {
+    listen 80;
+    server_name example.com;
+    root /var/www/dispatch;
+    index index.php;
+
+    # If installed in a subdirectory, adjust root and the location blocks below.
+    # For /blog/: root /var/www/dispatch; and use location /blog/ { ... }
+
+    # Deny access to hidden files (.htaccess, .git, etc.)
+    location ~ /\. {
+        deny all;
+    }
+
+    # Serve real files and directories directly; otherwise rewrite
+    location / {
+        try_files $uri $uri/ @rewrites;
+    }
+
+    location @rewrites {
+        rewrite ^/sitemap\.xml$            /sitemap.php    last;
+        rewrite ^/robots\.txt$             /robots.php     last;
+        rewrite ^/feed\.xml$               /feed.php       last;
+        rewrite ^/admin/?$                 /admin.php      last;
+        rewrite ^/post/([^/]+)/?$          /post.php?slug=$1   last;
+        rewrite ^/page/([^/]+)/?$          /page.php?slug=$1   last;
+        rewrite ^/tag/([^/]+)/?$           /archive.php?tag=$1 last;
+        rewrite ^/category/([^/]+)/?$      /archive.php?category=$1 last;
+        rewrite ^/archive/?$               /archive.php    last;
+        return 404;
+    }
+
+    # Pass PHP files to PHP-FPM
+    location ~ \.php$ {
+        include        fastcgi_params;
+        fastcgi_pass   unix:/run/php/php8.2-fpm.sock;  # adjust to your PHP-FPM socket
+        fastcgi_param  SCRIPT_FILENAME $document_root$fastcgi_script_name;
+    }
+
+    error_page 404 /404.php;
+    error_page 500 /500.php;
+}
+```
+
+> Adjust `fastcgi_pass` to match your PHP-FPM socket or TCP address (e.g. `127.0.0.1:9000`).
+
+---
+
 ## Admin panel
 
 | Section | What you can do |
