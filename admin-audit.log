@@ -1,0 +1,5 @@
+[2026-06-12 16:24:03] [::1] login FAIL user=admin
+[2026-06-12 16:24:03] [::1] login OK user=admin
+[2026-06-12 16:24:28] [::1] login OK user=admin
+[2026-06-12 16:27:49] [::1] login OK user=admin
+[2026-06-12 16:27:49] [::1] settings updated

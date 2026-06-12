@@ -1,4 +1,5 @@
 <?php
+if (function_exists('sendSecurityHeaders')) sendSecurityHeaders();
 $active     = $active     ?? 'home';
 $pagesDir   = $pagesDir   ?? 'pages';
 $base       = $base       ?? rtrim($config['base_path'] ?? '/', '/');
@@ -31,13 +32,16 @@ $headExtra  = $headExtra  ?? '';
     <meta name="twitter:title"       content="<?= html($headTitle) ?>">
     <meta name="twitter:description" content="<?= html($headDesc) ?>">
     <meta name="twitter:image"       content="<?= html($headImage) ?>">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"
+          integrity="sha384-XGjxtQfXaH2tnPFa9x+ruJTuLE3Aa6LhHSWRr1XeTyhezb4abCG4ccI5AkVDxqC+" crossorigin="anonymous">
     <link href="<?= $base ?>/assets/css/style.css" rel="stylesheet">
     <?php if (!empty($config['colors_active'])): ?>
     <?php
-        $cp  = $config['color_primary'] ?? '#0d6efd';
-        $cd  = $config['color_dark']    ?? '#212529';
+        // Re-validate at output time so a hand-edited config can't inject CSS/script.
+        $cp  = sanitizeHexColor($config['color_primary'] ?? '#0d6efd', '#0d6efd');
+        $cd  = sanitizeHexColor($config['color_dark']    ?? '#212529', '#212529');
         $cpH = hexDarken($cp, 0.85);
         $cdH = hexDarken($cd, 0.85);
         $rgb = hexToRgb($cp);

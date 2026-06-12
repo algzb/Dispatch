@@ -1,6 +1,17 @@
 <?php
-session_start();
 require_once __DIR__ . '/includes/functions.php';
+
+// Harden the session cookie before it is created: not readable from JS,
+// only sent over HTTPS when the request is secure, and not sent cross-site.
+$secureCookie = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
+session_set_cookie_params([
+    'httponly' => true,
+    'secure'   => $secureCookie,
+    'samesite' => 'Lax',
+]);
+session_start();
+sendSecurityHeaders();
+
 $config = require __DIR__ . '/config.php';
 
 define('POSTS_DIR',    __DIR__ . '/posts');
@@ -68,6 +79,16 @@ function verifyCsrf(): void {
     }
 }
 
+// Append a line to the admin audit log. Best-effort: never blocks an action if
+// the log isn't writable. The log lives outside the web root's content dirs and
+// is denied to the web by the includes/ rule pattern only if placed there — keep
+// it at project root and rely on it not matching any RewriteRule.
+function auditLog(string $event): void {
+    $ip   = $_SERVER['REMOTE_ADDR'] ?? '-';
+    $when = date('Y-m-d H:i:s');
+    @file_put_contents(__DIR__ . '/admin-audit.log', "[$when] [$ip] $event\n", FILE_APPEND | LOCK_EX);
+}
+
 // ─── Routing ──────────────────────────────────────────────────────────────────
 
 $action = $_GET['action'] ?? '';
@@ -75,7 +96,11 @@ $type   = in_array($_GET['type'] ?? '', ['page', 'product']) ? $_GET['type'] : '
 $slug   = $_GET['slug'] ?? '';
 $flash  = ['type' => '', 'msg' => ''];
 
-if ($action === 'logout') {
+// Logout must be a POST with a valid CSRF token, otherwise a third-party page
+// could force-logout the admin with a simple <img src="admin.php?action=logout">.
+if ($action === 'logout' && isPost()) {
+    verifyCsrf();
+    $_SESSION = [];
     session_destroy();
     go('admin.php');
 }
@@ -83,11 +108,28 @@ if ($action === 'logout') {
 if ($action === 'login' && isPost()) {
     $user = $_POST['username'] ?? '';
     $pass = $_POST['password'] ?? '';
-    if ($user === ($config['admin_user'] ?? '') && password_verify($pass, $config['admin_pass'] ?? '')) {
+
+    // Simple brute-force throttle: lock out for 15 minutes after 5 failures.
+    $fails  = $_SESSION['login_fails']  ?? 0;
+    $lockAt = $_SESSION['login_lock_at'] ?? 0;
+    $locked = $fails >= 5 && (time() - $lockAt) < 900;
+
+    if ($locked) {
+        $flash = ['type' => 'danger', 'msg' => 'Too many failed attempts. Try again in a few minutes.'];
+    } elseif ($user === ($config['admin_user'] ?? '')
+              && verifyAdminPassword($pass, $config['admin_pass'] ?? '')) {
+        // Rotate the session ID on privilege change to prevent session fixation.
+        session_regenerate_id(true);
+        unset($_SESSION['login_fails'], $_SESSION['login_lock_at']);
         $_SESSION['admin'] = true;
+        auditLog("login OK user=$user");
         go('admin.php');
+    } else {
+        $_SESSION['login_fails']   = $fails + 1;
+        $_SESSION['login_lock_at'] = time();
+        auditLog("login FAIL user=$user");
+        $flash = ['type' => 'danger', 'msg' => 'Invalid credentials.'];
     }
-    $flash = ['type' => 'danger', 'msg' => 'Invalid credentials.'];
 }
 
 // ─── Login gate ───────────────────────────────────────────────────────────────
@@ -100,7 +142,8 @@ if (empty($_SESSION['admin'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Admin — <?= e($config['blog_name']) ?></title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
 </head>
 <body class="bg-light d-flex align-items-center" style="min-height:100vh">
 <div class="container" style="max-width:380px">
@@ -151,12 +194,21 @@ if ($action === 'save' && isPost()) {
         $body = $_POST['body'] ?? '';
 
         $oldPath = safePath($type, $item['file']);
-        file_put_contents($oldPath, buildFileContent(array_filter($meta, fn($v) => $v !== ''), $body));
 
+        // If the slug changed, refuse to clobber a different existing file.
         if ($meta['slug'] !== $slug) {
-            rename($oldPath, safePath($type, $meta['slug'] . '.md'));
+            $newPath = safePath($type, $meta['slug'] . '.md');
+            if (file_exists($newPath) && realpath($newPath) !== realpath($oldPath)) {
+                $flash = ['type' => 'danger', 'msg' => "A file with the slug \"{$meta['slug']}\" already exists."];
+            } else {
+                file_put_contents($oldPath, buildFileContent(array_filter($meta, fn($v) => $v !== ''), $body));
+                rename($oldPath, $newPath);
+                go("admin.php?action=edit&type=$type&slug={$meta['slug']}&saved=1");
+            }
+        } else {
+            file_put_contents($oldPath, buildFileContent(array_filter($meta, fn($v) => $v !== ''), $body));
+            go("admin.php?action=edit&type=$type&slug={$meta['slug']}&saved=1");
         }
-        go("admin.php?action=edit&type=$type&slug={$meta['slug']}&saved=1");
     }
 }
 
@@ -194,6 +246,7 @@ if ($action === 'delete' && isPost()) {
     $item = findMarkdownBySlug($slug, contentDir($type));
     if ($item) {
         unlink(safePath($type, $item['file']));
+        auditLog("delete $type slug=$slug");
     }
     go("admin.php?type=$type");
 }
@@ -202,29 +255,58 @@ if ($action === 'delete' && isPost()) {
 
 define('UPLOADS_DIR', __DIR__ . '/assets/uploads');
 
+// Create the uploads directory if needed and drop in an .htaccess that prevents
+// any uploaded file from being executed as a script (defense in depth against a
+// malicious file that slips past the MIME check).
+function ensureUploadsDir(): void {
+    if (!is_dir(UPLOADS_DIR)) {
+        mkdir(UPLOADS_DIR, 0750, true);
+    }
+    $guard = UPLOADS_DIR . '/.htaccess';
+    if (!is_file($guard)) {
+        @file_put_contents(
+            $guard,
+            "php_flag engine off\n" .
+            "Options -ExecCGI\n" .
+            "RemoveHandler .php .phtml .php3 .php4 .php5 .php7 .phps .pht .phar\n" .
+            "<FilesMatch \"\\.(php|phtml|php[3457]|phps|pht|phar)$\">\n" .
+            "    Require all denied\n" .
+            "</FilesMatch>\n"
+        );
+    }
+}
+
 if ($action === 'upload' && isPost()) {
     header('Content-Type: application/json');
     $token = $_POST['csrf_token'] ?? '';
     if (!hash_equals($_SESSION['csrf_token'] ?? '', $token)) {
         echo json_encode(['error' => 'Invalid CSRF token.']); exit;
     }
-    if (!is_dir(UPLOADS_DIR)) mkdir(UPLOADS_DIR, 0755, true);
+    ensureUploadsDir();
 
     $file = $_FILES['image'] ?? null;
     if (!$file || $file['error'] !== UPLOAD_ERR_OK) {
         echo json_encode(['error' => 'Upload failed.']); exit;
     }
 
-    $allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-    $finfo   = finfo_open(FILEINFO_MIME_TYPE);
-    $mime    = finfo_file($finfo, $file['tmp_name']);
+    // Map allowed MIME types to a fixed extension. The extension is derived from
+    // the verified content type, never from the user-supplied filename — this
+    // prevents double-extension / disguised-executable uploads (e.g. shell.phtml).
+    $allowed = [
+        'image/jpeg' => 'jpg',
+        'image/png'  => 'png',
+        'image/gif'  => 'gif',
+        'image/webp' => 'webp',
+    ];
+    $finfo = finfo_open(FILEINFO_MIME_TYPE);
+    $mime  = finfo_file($finfo, $file['tmp_name']);
     finfo_close($finfo);
 
-    if (!in_array($mime, $allowed, true)) {
+    if (!isset($allowed[$mime])) {
         echo json_encode(['error' => 'Only jpg, png, gif, webp allowed.']); exit;
     }
 
-    $ext  = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+    $ext  = $allowed[$mime];
     $name = date('Ymd-His') . '-' . normalizeSlug(pathinfo($file['name'], PATHINFO_FILENAME)) . '.' . $ext;
     $dest = UPLOADS_DIR . '/' . $name;
 
@@ -245,7 +327,10 @@ if ($action === 'upload' && isPost()) {
 if ($action === 'delete-media' && isPost()) {
     verifyCsrf();
     $file = basename($_POST['file'] ?? '');
-    if ($file) @unlink(UPLOADS_DIR . '/' . $file);
+    $path = UPLOADS_DIR . '/' . $file;
+    if ($file && is_file($path) && !unlink($path)) {
+        $flash = ['type' => 'danger', 'msg' => 'Could not delete the file.'];
+    }
     go('admin.php?action=media');
 }
 
@@ -277,12 +362,26 @@ if ($action === 'save-settings' && isPost()) {
             if ($v !== '') {
                 $new[$k] = password_hash($v, PASSWORD_DEFAULT);
             }
+        } elseif ($k === 'color_primary' || $k === 'color_dark') {
+            // Never trust the posted color — it is echoed raw into a <style> block.
+            $fallback = $k === 'color_dark' ? '#212529' : '#0d6efd';
+            $new[$k] = sanitizeHexColor(trim($_POST[$k] ?? ''), $fallback);
         } else {
             $new[$k] = trim($_POST[$k] ?? '');
         }
     }
-    file_put_contents($configPath, '<?php' . "\nreturn " . var_export($new, true) . ";\n");
-    go('admin.php?action=settings&saved=1');
+
+    // Write atomically: render to a temp file, then rename over config.php so a
+    // crash mid-write can never leave a half-written (syntactically broken) config.
+    $payload = '<?php' . "\nreturn " . var_export($new, true) . ";\n";
+    $tmp = $configPath . '.tmp.' . bin2hex(random_bytes(6));
+    if (file_put_contents($tmp, $payload, LOCK_EX) === false || !rename($tmp, $configPath)) {
+        @unlink($tmp);
+        $flash = ['type' => 'danger', 'msg' => 'Could not save settings (file not writable).'];
+    } else {
+        auditLog('settings updated');
+        go('admin.php?action=settings&saved=1');
+    }
 }
 
 // ─── View data ────────────────────────────────────────────────────────────────
@@ -316,8 +415,10 @@ $typeLabelPlural = $type === 'page' ? 'Pages' : ($type === 'product' ? 'Products
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Admin — <?= e($config['blog_name']) ?></title>
     <meta name="csrf-token" content="<?= e(csrfToken()) ?>">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://unpkg.com/easymde/dist/easymde.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://unpkg.com/easymde@2.18.0/dist/easymde.min.css"
+          integrity="sha384-uqD/OYCNfagd1EgXMgl5QedTD5K+B3e9b8GYo/41t7+Serf7CBxvl+tU1gHd+qd1" crossorigin="anonymous">
     <style>
         .sidebar { min-height: calc(100vh - 56px); border-right: 1px solid #dee2e6; }
         .EasyMDEContainer .CodeMirror { min-height: 340px; font-size: 14px; }
@@ -330,7 +431,10 @@ $typeLabelPlural = $type === 'page' ? 'Pages' : ($type === 'product' ? 'Products
     <span class="navbar-brand fw-bold"><?= e($config['blog_name']) ?> — Admin</span>
     <div class="d-flex gap-2">
         <a href="<?= $base ?>/" target="_blank" class="btn btn-sm btn-outline-light">View site</a>
-        <a href="admin.php?action=logout" class="btn btn-sm btn-danger">Logout</a>
+        <form method="POST" action="admin.php?action=logout" class="d-inline m-0">
+            <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
+            <button type="submit" class="btn btn-sm btn-danger">Logout</button>
+        </form>
     </div>
 </nav>
 
@@ -532,7 +636,7 @@ $formTitle  = $isEdit ? "Edit $typeLabel" : "New $typeLabel";
 <?php elseif ($view === 'media'): ?>
 <!-- ── MEDIA ──────────────────────────────────────────────────────────────── -->
 <?php
-if (!is_dir(UPLOADS_DIR)) mkdir(UPLOADS_DIR, 0755, true);
+ensureUploadsDir();
 $mediaFiles = array_values(array_filter(scandir(UPLOADS_DIR), function($f) {
     return preg_match('/\.(jpe?g|png|gif|webp)$/i', $f);
 }));
@@ -916,8 +1020,10 @@ $baseUrl  = $protocol . '://' . $_SERVER['HTTP_HOST'] . rtrim(dirname($_SERVER['
 </div><!-- /row -->
 </div><!-- /container-fluid -->
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://unpkg.com/easymde/dist/easymde.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/easymde@2.18.0/dist/easymde.min.js"
+        integrity="sha384-KtB38COewxfrhJxoN2d+olxJAeT08LF8cVZ6DQ8Poqu89zIptqO6zAXoIxpGNWYE" crossorigin="anonymous"></script>
 <script>
 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
 

@@ -6,6 +6,49 @@ function html($value) {
     return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
+// Emit baseline security headers. Call before any output is sent.
+// CSP allows the CDNs this project loads (jsdelivr, unpkg) plus inline styles
+// (the optional custom-colors <style> block) and remote images.
+function sendSecurityHeaders(): void {
+    if (headers_sent()) return;
+    header('X-Content-Type-Options: nosniff');
+    header('X-Frame-Options: SAMEORIGIN');
+    header('Referrer-Policy: strict-origin-when-cross-origin');
+    // Note: 'unsafe-inline' is required for scripts because the admin panel uses
+    // inline <script> blocks and inline event handlers (onclick/onsubmit). This
+    // still blocks script injection from *unknown external origins* — the common
+    // stored-XSS vector here. Tightening to a nonce-based policy would require
+    // refactoring those inline handlers to addEventListener first.
+    header(
+        "Content-Security-Policy: " .
+        "default-src 'self'; " .
+        "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com https://www.google.com https://www.gstatic.com; " .
+        "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com; " .
+        "font-src 'self' https://cdn.jsdelivr.net; " .
+        "img-src 'self' data: https:; " .
+        "frame-src https://www.google.com; " .
+        "frame-ancestors 'self'; " .
+        "base-uri 'self'"
+    );
+}
+
+// Verify a submitted password against the stored credential.
+// Accepts both a bcrypt hash (set once the admin changes the password) and a
+// plaintext default, so config.php never has to run bcrypt on every request.
+function verifyAdminPassword(string $submitted, string $stored): bool {
+    if ($stored === '') return false;
+    if (preg_match('/^\$2[aby]\$/', $stored)) {
+        return password_verify($submitted, $stored);
+    }
+    return hash_equals($stored, $submitted);
+}
+
+// Validate a "#rrggbb" hex color. Returns the lowercased value, or the fallback
+// when the input is not a well-formed 6-digit hex color.
+function sanitizeHexColor(string $value, string $fallback): string {
+    return preg_match('/^#[0-9a-fA-F]{6}$/', $value) ? strtolower($value) : $fallback;
+}
+
 // Convert any string to a lowercase, hyphen-separated URL slug.
 // Non-alphanumeric characters (except hyphens) are replaced, then leading/trailing hyphens stripped.
 function normalizeSlug($slug) {

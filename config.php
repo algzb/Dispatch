@@ -82,8 +82,10 @@ return [
     'color_dark'     => '#212529',   // Bootstrap default dark
 
     // Admin credentials. Change the password via Settings after first login.
-    // Default password is 'demo'. The value stored here is always a bcrypt hash —
-    // never replace it with a plaintext string.
+    // The shipped default password is the plaintext 'demo'. As soon as you set a
+    // new password in Settings it is stored here as a bcrypt hash (starts with $2).
+    // The login code accepts either form, so we never call password_hash() on every
+    // request (doing so here would run bcrypt on every public page load — a DoS).
     'admin_user' => 'admin',
-    'admin_pass' => password_hash('demo', PASSWORD_DEFAULT),
+    'admin_pass' => 'demo',
 ];

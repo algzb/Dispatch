@@ -1,5 +1,16 @@
 AddDefaultCharset UTF-8
 
+# Block direct web access to sensitive files. These are only ever loaded via
+# require/include — never requested directly — so denying them protects the admin
+# hash and reCAPTCHA secret if the PHP handler is ever misconfigured.
+<FilesMatch "^config\.php$">
+    Require all denied
+</FilesMatch>
+<FilesMatch "\.(log|md|json)$">
+    Require all denied
+</FilesMatch>
+RedirectMatch 403 ^/(includes|libs)/.*$
+
 <IfModule mod_rewrite.c>
 
 RewriteEngine On

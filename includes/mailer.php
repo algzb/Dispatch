@@ -26,7 +26,7 @@ function sendMail(string $to, string $subject, string $body, string $replyTo = '
         $headers .= "Reply-To: {$replyTo}\r\n";
     }
 
-    $headers .= 'X-Mailer: PHP/' . phpversion() . "\r\n";
+    $headers .= "X-Mailer: PHP\r\n";
 
     return (bool) mail($to, $encodedSubject, wordwrap($body, 70, "\r\n"), $headers);
 }
